@@ -55,7 +55,8 @@ let JOB_DATA = loadJobs();
 const state = {
   lang: 'hi', // 'hi' = Hindi, 'mr' = Marathi
   userPhone: localStorage.getItem('userPhone') || null,
-  activeCategory: 'all'
+  activeCategory: 'all',
+  searchQuery: ''
 };
 
 // UI Text Dictionary
@@ -172,9 +173,20 @@ function renderJobs() {
   JOB_DATA = loadJobs(); // Refresh latest if changed elsewhere
   jobListContainer.innerHTML = '';
   
-  const filteredJobs = state.activeCategory === 'all' 
-    ? JOB_DATA 
-    : JOB_DATA.filter(job => job.category === state.activeCategory);
+  const filteredJobs = JOB_DATA.filter(job => {
+    const matchCategory = state.activeCategory === 'all' || job.category === state.activeCategory;
+    const searchString = state.searchQuery || '';
+    if (!searchString) return matchCategory;
+    
+    // check text match
+    const titleObj = job.title;
+    const titleText = (titleObj.hi || '') + ' ' + (titleObj.mr || '') + ' ' + (typeof titleObj === 'string' ? titleObj : '');
+    const titleMatch = titleText.toLowerCase().includes(searchString);
+    const descMatch = job.desc.toLowerCase().includes(searchString);
+    const locMatch = job.location.toLowerCase().includes(searchString);
+    
+    return matchCategory && (titleMatch || descMatch || locMatch);
+  });
 
   if (filteredJobs.length === 0) {
     const emptyMsg = state.lang === 'hi' ? 'इस श्रेणी में कोई काम नहीं मिला।' : 'या श्रेणीत कोणतेही काम आढळले नाही.';
@@ -254,22 +266,19 @@ function handleVoiceRecording(btnElement, textOutputElement, langCode, isPostJob
     btnElement.classList.remove('listening');
     
     if (textOutputElement) {
-      textOutputElement.textContent = `Poocha gaya: "${transcript}"`;
+      textOutputElement.textContent = `🎤 "${transcript}"`;
     }
 
     if (isPostJob) {
-      document.getElementById('post-result-card').classList.remove('hidden');
-      document.getElementById('recorded-job-text').textContent = transcript;
-      
-      const cat = extractCategory(transcript);
-      const catNames = { kheti: "खेती (Farming)", mistri: "मिस्त्री (Construction)", majdoori: "मज़दूरी (Labour)" };
-      const autoCatEl = document.getElementById('auto-category-text');
-      autoCatEl.textContent = `✓ Auto-Detected: ${catNames[cat]}`;
-      autoCatEl.dataset.detected = cat;
-
+      // Feed it into the textarea instead of static text
+      const textArea = document.getElementById('text-post-job');
+      textArea.value = transcript;
+      textArea.dispatchEvent(new Event('input')); // trigger auto category
     } else {
       showToast("Searching for: " + transcript);
-      // Here you would normally filter the JOB_DATA
+      const searchBox = document.getElementById('text-search-work');
+      searchBox.value = transcript;
+      searchBox.dispatchEvent(new Event('input')); // trigger filter
     }
   };
 
@@ -300,7 +309,12 @@ document.getElementById('record-job-btn').addEventListener('click', function() {
 
 // Setup Confirm Post
 document.getElementById('confirm-post-btn').addEventListener('click', () => {
-    const text = document.getElementById('recorded-job-text').textContent;
+    const text = document.getElementById('text-post-job').value.trim();
+    if (!text) {
+      showToast("Please provide job details first.");
+      return;
+    }
+    
     showToast("Job Posted Successfully!");
     
     // Read category from dataset
@@ -319,6 +333,7 @@ document.getElementById('confirm-post-btn').addEventListener('click', () => {
     
     saveJobs();
     
+    document.getElementById('text-post-job').value = '';
     document.getElementById('post-result-card').classList.add('hidden');
     // switch to home tab to show the new post
     navItems[0].click();
@@ -408,6 +423,29 @@ verifyOtpBtn.addEventListener('click', () => {
 
 // Init Login Strings
 updateLoginStrings();
+
+// Search Box Logic
+document.getElementById('text-search-work').addEventListener('input', (e) => {
+  state.searchQuery = e.target.value.toLowerCase();
+  renderJobs();
+});
+
+// Post Text Area Logic
+document.getElementById('text-post-job').addEventListener('input', (e) => {
+  const text = e.target.value.trim();
+  const resultCard = document.getElementById('post-result-card');
+  const autoCatEl = document.getElementById('auto-category-text');
+  
+  if (text.length > 0) {
+    resultCard.classList.remove('hidden');
+    const cat = extractCategory(text);
+    const catNames = { kheti: "खेती (Farming)", mistri: "मिस्त्री (Construction)", majdoori: "मज़दूरी (Labour)" };
+    autoCatEl.textContent = `✓ Auto-Detected: ${catNames[cat]}`;
+    autoCatEl.dataset.detected = cat;
+  } else {
+    resultCard.classList.add('hidden');
+  }
+});
 
 // Check session / focus on load
 if (state.userPhone) {
