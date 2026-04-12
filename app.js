@@ -220,6 +220,16 @@ function renderJobs() {
 // ------------------------------
 // Voice Search & Job Posting Logic
 // ------------------------------
+function extractCategory(text) {
+  const lower = text.toLowerCase();
+  const khetiMatches = ["khet", "kheti", "fasal", "kisan", "gehun", "farm", "tractor", "खेत", "खेती", "फसल", "किसान", "गेहूं", "शेत", "ट्रैक्टर", "कापणी", "नांगरणी", "पेरणी"];
+  const mistriMatches = ["mistri", "cement", "diwar", "makaan", "ghar", "construction", "gawandi", "paint", "मिस्त्री", "सीमेंट", "दीवार", "मकान", "घर", "गवंडी", "रंग", "बांधकाम"];
+  
+  if (khetiMatches.some(k => lower.includes(k))) return 'kheti';
+  if (mistriMatches.some(m => lower.includes(m))) return 'mistri';
+  return 'majdoori';
+}
+
 function handleVoiceRecording(btnElement, textOutputElement, langCode, isPostJob) {
   if (!recognition) {
     showToast("Voice feature not supported in this browser.");
@@ -250,6 +260,13 @@ function handleVoiceRecording(btnElement, textOutputElement, langCode, isPostJob
     if (isPostJob) {
       document.getElementById('post-result-card').classList.remove('hidden');
       document.getElementById('recorded-job-text').textContent = transcript;
+      
+      const cat = extractCategory(transcript);
+      const catNames = { kheti: "खेती (Farming)", mistri: "मिस्त्री (Construction)", majdoori: "मज़दूरी (Labour)" };
+      const autoCatEl = document.getElementById('auto-category-text');
+      autoCatEl.textContent = `✓ Auto-Detected: ${catNames[cat]}`;
+      autoCatEl.dataset.detected = cat;
+
     } else {
       showToast("Searching for: " + transcript);
       // Here you would normally filter the JOB_DATA
@@ -286,10 +303,9 @@ document.getElementById('confirm-post-btn').addEventListener('click', () => {
     const text = document.getElementById('recorded-job-text').textContent;
     showToast("Job Posted Successfully!");
     
-    // Add to dummy list
-    const selectedCategory = document.getElementById('post-category') 
-      ? document.getElementById('post-category').value 
-      : 'majdoori';
+    // Read category from dataset
+    const autoCatEl = document.getElementById('auto-category-text');
+    const selectedCategory = autoCatEl && autoCatEl.dataset.detected ? autoCatEl.dataset.detected : 'majdoori';
 
     JOB_DATA.unshift({
         id: Date.now(),
