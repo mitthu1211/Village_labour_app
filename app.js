@@ -1,12 +1,12 @@
 // Mock Data for Jobs
-const JOB_DATA = [
+const DEFAULT_JOBS = [
   {
     id: 1,
     title: { hi: "खेत की कटाई", mr: "शेत कापणी" },
     desc: "कल 3 मज़दूर चाहिए गेहूं काटने के लिए।",
     wage: "₹400 / दिन",
     location: "2 किमी दूर - रामु का खेत",
-    phone: "1234567890"
+    phone: "9876543210"
   },
   {
     id: 2,
@@ -14,7 +14,7 @@ const JOB_DATA = [
     desc: "दीवार बनाने के लिए 1 मिस्त्री और 2 हेल्पर चाहिए।",
     wage: "₹600 / दिन",
     location: "4 किमी दूर - सरपंच घर",
-    phone: "1234567890"
+    phone: "9876543211"
   },
   {
     id: 3,
@@ -22,13 +22,27 @@ const JOB_DATA = [
     desc: "ट्रैक्टर के साथ जुताई का काम है।",
     wage: "₹500 / दिन",
     location: "1 किमी दूर - शिवम् का खेत",
-    phone: "1234567890"
+    phone: "9876543212"
   }
 ];
+
+function loadJobs() {
+  const stored = localStorage.getItem('gaon_jobs');
+  if (stored) return JSON.parse(stored);
+  localStorage.setItem('gaon_jobs', JSON.stringify(DEFAULT_JOBS));
+  return DEFAULT_JOBS;
+}
+
+function saveJobs() {
+  localStorage.setItem('gaon_jobs', JSON.stringify(JOB_DATA));
+}
+
+let JOB_DATA = loadJobs();
 
 // App State
 const state = {
   lang: 'hi', // 'hi' = Hindi, 'mr' = Marathi
+  userPhone: localStorage.getItem('userPhone') || null
 };
 
 // UI Text Dictionary
@@ -129,6 +143,7 @@ function updateLanguageUI() {
 // Render Jobs
 // ------------------------------
 function renderJobs() {
+  JOB_DATA = loadJobs(); // Refresh latest if changed elsewhere
   jobListContainer.innerHTML = '';
   JOB_DATA.forEach(job => {
     const card = document.createElement('div');
@@ -141,6 +156,9 @@ function renderJobs() {
           <div class="job-title">${jobTitle}</div>
           <div class="job-meta">
             <i class="ri-map-pin-2-fill"></i> ${job.location}
+          </div>
+          <div class="job-meta" style="color: var(--primary-dark); font-weight: 700; margin-top: 6px;">
+            <i class="ri-phone-fill"></i> +91 ${job.phone}
           </div>
         </div>
         <div class="job-wage">${job.wage}</div>
@@ -236,10 +254,12 @@ document.getElementById('confirm-post-btn').addEventListener('click', () => {
         id: Date.now(),
         title: { hi: "नया काम", mr: "नवीन काम" },
         desc: text,
-        wage: "बातचीत करें",
+        wage: "बातचीत करें (Discuss)",
         location: "Current Location",
-        phone: "1234567890"
+        phone: state.userPhone || "Not Provided"
     });
+    
+    saveJobs();
     
     document.getElementById('post-result-card').classList.add('hidden');
     // switch to home tab to show the new post
@@ -317,9 +337,12 @@ sendOtpBtn.addEventListener('click', () => {
 
 verifyOtpBtn.addEventListener('click', () => {
   if (otpInput.value === '1234') {
+    state.userPhone = mobileInput.value;
+    localStorage.setItem('userPhone', state.userPhone);
     loginContainer.classList.add('hidden');
     mainAppContainer.classList.remove('hidden');
     showToast('लॉगिन सफल (Login Success)');
+    renderJobs();
   } else {
     showToast(state.lang === 'hi' ? 'गलत OTP (Incorrect OTP)' : 'चुकीचा OTP');
   }
@@ -329,7 +352,12 @@ verifyOtpBtn.addEventListener('click', () => {
 updateLoginStrings();
 
 // Check session / focus on load
-if(mobileInput) mobileInput.focus();
+if (state.userPhone) {
+  loginContainer.classList.add('hidden');
+  mainAppContainer.classList.remove('hidden');
+} else {
+  if(mobileInput) mobileInput.focus();
+}
 
 // Init Application
 updateLanguageUI();

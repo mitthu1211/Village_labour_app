@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Portal - Gaon Ka Kaam</title>
+  <link rel="stylesheet" href="admin.css">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+</head>
+<body>
+
+  <!-- Admin Login -->
+  <div id="admin-login-overlay" class="login-wrapper">
+    <div class="login-box">
+      <div style="color: var(--danger); font-size: 50px;"><i class="ri-shield-keyhole-fill"></i></div>
+      <h2>Admin Portal</h2>
+      <p style="margin-bottom:20px; color:#64748b;">Enter master password to manage system</p>
+      <input type="password" id="admin-pwd" placeholder="Password (admin123)" class="form-input">
+      <button class="btn-primary" id="admin-login-btn">Secure Login</button>
+      <p id="admin-error" style="color:var(--danger); margin-top: 10px; display:none;">Incorrect Password</p>
+    </div>
+  </div>
+
+  <!-- Dashboard -->
+  <div id="admin-dashboard" class="dashboard-wrapper hidden">
+    
+    <aside class="sidebar">
+      <div class="sidebar-logo">
+        <i class="ri-plant-fill ri-xl"></i> System Admin
+      </div>
+      <nav class="sidebar-nav">
+        <a href="#" class="active"><i class="ri-briefcase-4-fill"></i> Manage Jobs</a>
+        <a href="index.html" target="_blank"><i class="ri-smartphone-line"></i> View App</a>
+      </nav>
+      <div class="sidebar-footer">
+        <button id="admin-logout-btn"><i class="ri-logout-box-r-line"></i> Logout</button>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <header class="top-bar">
+        <h1>Dashboard Control Panel</h1>
+        <div class="stat-badge">Total Jobs: <span id="total-jobs-count">0</span></div>
+      </header>
+
+      <div class="table-container">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Job Activity</th>
+              <th>Contact Phone</th>
+              <th>Wage</th>
+              <th>Location</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="job-table-body">
+            <!-- Rows injected by JS -->
+          </tbody>
+        </table>
+      </div>
+    </main>
+  </div>
+
+  <script src="admin.js"></script>
+</body>
+</html>
