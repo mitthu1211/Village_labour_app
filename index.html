@@ -67,10 +67,10 @@
         <p id="voice-feedback" class="voice-feedback hidden"></p>
         
         <div class="filters">
-          <button class="filter-chip active">सब</button>
-          <button class="filter-chip">खेती</button>
-          <button class="filter-chip">मज़दूरी</button>
-          <button class="filter-chip">मिस्त्री</button>
+          <button class="filter-chip active" data-category="all">सब</button>
+          <button class="filter-chip" data-category="kheti">खेती</button>
+          <button class="filter-chip" data-category="majdoori">मज़दूरी</button>
+          <button class="filter-chip" data-category="mistri">मिस्त्री</button>
         </div>
       </div>
 
@@ -90,6 +90,15 @@
             <i class="ri-mic-fill"></i>
           </button>
           <p id="recording-status">Tap to speak</p>
+        </div>
+
+        <div style="margin-bottom: 30px; text-align: left;">
+          <p style="font-size:14px; margin-bottom:8px; color: var(--text-light); font-weight: 600;">किस प्रकार का काम है? (Work Type):</p>
+          <select id="post-category" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); background: white; font-size: 16px; outline: none;">
+            <option value="kheti">खेती (Farming)</option>
+            <option value="majdoori">मज़दूरी (Daily Wage)</option>
+            <option value="mistri">मिस्त्री (Construction)</option>
+          </select>
         </div>
 
         <div id="post-result-card" class="result-card hidden">

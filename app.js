@@ -6,7 +6,8 @@ const DEFAULT_JOBS = [
     desc: "कल 3 मज़दूर चाहिए गेहूं काटने के लिए।",
     wage: "₹400 / दिन",
     location: "2 किमी दूर - रामु का खेत",
-    phone: "9876543210"
+    phone: "9876543210",
+    category: "kheti"
   },
   {
     id: 2,
@@ -14,7 +15,8 @@ const DEFAULT_JOBS = [
     desc: "दीवार बनाने के लिए 1 मिस्त्री और 2 हेल्पर चाहिए।",
     wage: "₹600 / दिन",
     location: "4 किमी दूर - सरपंच घर",
-    phone: "9876543211"
+    phone: "9876543211",
+    category: "mistri"
   },
   {
     id: 3,
@@ -22,7 +24,17 @@ const DEFAULT_JOBS = [
     desc: "ट्रैक्टर के साथ जुताई का काम है।",
     wage: "₹500 / दिन",
     location: "1 किमी दूर - शिवम् का खेत",
-    phone: "9876543212"
+    phone: "9876543212",
+    category: "kheti"
+  },
+  {
+    id: 4,
+    title: { hi: "सामान ढोना", mr: "सामान उचलणे" },
+    desc: "दुकान से 50 बोरी सीमेंट उतारना है।",
+    wage: "₹350 / दिन",
+    location: "0.5 किमी दूर - रामजी सेठ",
+    phone: "9876543213",
+    category: "majdoori"
   }
 ];
 
@@ -42,7 +54,8 @@ let JOB_DATA = loadJobs();
 // App State
 const state = {
   lang: 'hi', // 'hi' = Hindi, 'mr' = Marathi
-  userPhone: localStorage.getItem('userPhone') || null
+  userPhone: localStorage.getItem('userPhone') || null,
+  activeCategory: 'all'
 };
 
 // UI Text Dictionary
@@ -87,6 +100,19 @@ if (SpeechRecognition) {
   recognition.interimResults = false;
   recognition.maxAlternatives = 1;
 }
+
+// ------------------------------
+// Filter Chips Logic
+// ------------------------------
+const filterChips = document.querySelectorAll('.filter-chip');
+filterChips.forEach(chip => {
+  chip.addEventListener('click', () => {
+    filterChips.forEach(c => c.classList.remove('active'));
+    chip.classList.add('active');
+    state.activeCategory = chip.getAttribute('data-category');
+    renderJobs();
+  });
+});
 
 // ------------------------------
 // Navigation Logic
@@ -145,7 +171,18 @@ function updateLanguageUI() {
 function renderJobs() {
   JOB_DATA = loadJobs(); // Refresh latest if changed elsewhere
   jobListContainer.innerHTML = '';
-  JOB_DATA.forEach(job => {
+  
+  const filteredJobs = state.activeCategory === 'all' 
+    ? JOB_DATA 
+    : JOB_DATA.filter(job => job.category === state.activeCategory);
+
+  if (filteredJobs.length === 0) {
+    const emptyMsg = state.lang === 'hi' ? 'इस श्रेणी में कोई काम नहीं मिला।' : 'या श्रेणीत कोणतेही काम आढळले नाही.';
+    jobListContainer.innerHTML = `<p style="text-align:center; padding: 20px; color: var(--text-light);">${emptyMsg}</p>`;
+    return;
+  }
+
+  filteredJobs.forEach(job => {
     const card = document.createElement('div');
     card.className = 'job-card';
     const jobTitle = state.lang === 'hi' ? job.title.hi : job.title.mr;
@@ -250,13 +287,18 @@ document.getElementById('confirm-post-btn').addEventListener('click', () => {
     showToast("Job Posted Successfully!");
     
     // Add to dummy list
+    const selectedCategory = document.getElementById('post-category') 
+      ? document.getElementById('post-category').value 
+      : 'majdoori';
+
     JOB_DATA.unshift({
         id: Date.now(),
         title: { hi: "नया काम", mr: "नवीन काम" },
         desc: text,
         wage: "बातचीत करें (Discuss)",
         location: "Current Location",
-        phone: state.userPhone || "Not Provided"
+        phone: state.userPhone || "Not Provided",
+        category: selectedCategory
     });
     
     saveJobs();
