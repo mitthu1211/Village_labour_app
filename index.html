@@ -10,6 +10,33 @@
 </head>
 <body>
 
+  <!-- Login Overlay -->
+  <div id="login-container" class="login-wrapper">
+    <div class="login-box">
+      <div class="logo-large">
+        <i class="ri-plant-fill"></i>
+        <h1>Gaon Ka Kaam</h1>
+      </div>
+      <h2 id="login-title">लाग इन (Login)</h2>
+      <p id="login-sub">अपना मोबाइल नंबर दर्ज करें</p>
+      
+      <div id="step-1-phone">
+        <div class="input-group">
+          <span class="country-code">+91</span>
+          <input type="tel" id="mobile-input" placeholder="मोबाइल नंबर" maxlength="10" oninput="this.value=this.value.replace(/[^0-9]/g,'');">
+        </div>
+        <button id="send-otp-btn" class="btn-primary" style="margin-top: 20px;">OTP भेजें</button>
+      </div>
+
+      <div id="step-2-otp" class="hidden">
+        <p style="color: var(--text-light); margin-bottom: 15px; font-size: 13px;">(डेमो के लिए OTP: 1234 डालें)</p>
+        <input type="tel" id="otp-input" placeholder="OTP दर्ज करें" class="large-input" maxlength="4" oninput="this.value=this.value.replace(/[^0-9]/g,'');">
+        <button id="verify-otp-btn" class="btn-primary" style="margin-top: 20px;">कन्फर्म करें</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="main-app-container" class="hidden">
   <!-- Top Header -->
   <header class="app-header">
     <div class="logo">
@@ -119,6 +146,8 @@
       <span id="nav-profile">प्रोफाइल</span>
     </button>
   </nav>
+
+  </div> <!-- End main-app-container -->
 
   <!-- Modals / Overlays (Audio Setup) -->
   <div id="toast" class="toast hidden">Action successful</div>

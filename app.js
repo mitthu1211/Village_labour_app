@@ -266,6 +266,71 @@ function showToast(msg) {
   setTimeout(() => toastEl.classList.add('hidden'), 3000);
 }
 
+// ------------------------------
+// Login & Auth Logic
+// ------------------------------
+const loginContainer = document.getElementById('login-container');
+const mainAppContainer = document.getElementById('main-app-container');
+const sendOtpBtn = document.getElementById('send-otp-btn');
+const verifyOtpBtn = document.getElementById('verify-otp-btn');
+const mobileInput = document.getElementById('mobile-input');
+const otpInput = document.getElementById('otp-input');
+const step1Phone = document.getElementById('step-1-phone');
+const step2Otp = document.getElementById('step-2-otp');
+const loginTitle = document.getElementById('login-title');
+const loginSub = document.getElementById('login-sub');
+
+// Update Login UI based on Lang
+function updateLoginStrings() {
+  if (state.lang === 'hi') {
+    loginTitle.textContent = "लाग इन (Login)";
+    loginSub.textContent = "अपना मोबाइल नंबर दर्ज करें";
+    sendOtpBtn.textContent = "OTP भेजें";
+    verifyOtpBtn.textContent = "लॉगिन करें";
+    mobileInput.placeholder = "मोबाइल नंबर";
+    otpInput.placeholder = "OTP दर्ज करें";
+  } else {
+    loginTitle.textContent = "लॉग इन (Login)";
+    loginSub.textContent = "तुमचा मोबाईल नंबर टाका";
+    sendOtpBtn.textContent = "OTP पाठवा";
+    verifyOtpBtn.textContent = "लॉगिन करा";
+    mobileInput.placeholder = "मोबाईल नंबर";
+    otpInput.placeholder = "OTP टाका";
+  }
+}
+
+langToggle.addEventListener('click', updateLoginStrings);
+
+sendOtpBtn.addEventListener('click', () => {
+  if (mobileInput.value.length === 10) {
+    step1Phone.classList.add('hidden');
+    step2Otp.classList.remove('hidden');
+    showToast('OTP भेजा गया: 1234');
+    
+    // Switch title
+    loginTitle.textContent = state.lang === 'hi' ? 'OTP दर्ज करें' : 'OTP टाका';
+    loginSub.textContent = '+91 ' + mobileInput.value + ' पर OTP भेजा गया';
+  } else {
+    showToast(state.lang === 'hi' ? 'कृपया सही मोबाइल नंबर डालें' : 'कृपया योग्य मोबाईल नंबर टाका');
+  }
+});
+
+verifyOtpBtn.addEventListener('click', () => {
+  if (otpInput.value === '1234') {
+    loginContainer.classList.add('hidden');
+    mainAppContainer.classList.remove('hidden');
+    showToast('लॉगिन सफल (Login Success)');
+  } else {
+    showToast(state.lang === 'hi' ? 'गलत OTP (Incorrect OTP)' : 'चुकीचा OTP');
+  }
+});
+
+// Init Login Strings
+updateLoginStrings();
+
+// Check session / focus on load
+if(mobileInput) mobileInput.focus();
+
 // Init Application
 updateLanguageUI();
 renderJobs();

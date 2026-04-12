@@ -446,3 +446,81 @@ html, body {
 .nav-item.active {
   color: var(--primary);
 }
+
+/* Auth / Login Styles */
+.login-wrapper {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: var(--primary);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+  padding: 20px;
+}
+.login-wrapper.hidden { display: none; }
+
+.login-box {
+  background: white;
+  width: 100%;
+  max-width: 400px;
+  padding: 40px 20px;
+  border-radius: 20px;
+  text-align: center;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+}
+
+.logo-large {
+  color: var(--primary);
+  margin-bottom: 20px;
+}
+.logo-large i { font-size: 60px; line-height: 1;}
+.logo-large h1 { font-size: 24px; font-weight: 700; color: var(--primary-dark); }
+
+.login-box h2 { font-size: 22px; color: var(--text-dark); margin-bottom: 8px; }
+.login-box p { color: var(--text-light); font-size: 15px; margin-bottom: 30px; }
+
+.input-group {
+  display: flex;
+  align-items: center;
+  border: 2px solid var(--border-color);
+  border-radius: 12px;
+  overflow: hidden;
+  background: #f8fafc;
+}
+.country-code {
+  padding: 16px;
+  background: #f1f5f9;
+  border-right: 1px solid var(--border-color);
+  color: var(--text-dark);
+  font-weight: 600;
+}
+#mobile-input {
+  flex: 1;
+  border: none;
+  padding: 16px;
+  font-size: 18px;
+  background: transparent;
+  outline: none;
+}
+
+.large-input {
+  width: 100%;
+  border: 2px solid var(--border-color);
+  border-radius: 12px;
+  padding: 16px;
+  font-size: 20px;
+  text-align: center;
+  letter-spacing: 4px;
+  outline: none;
+}
+.large-input:focus, .input-group:focus-within {
+  border-color: var(--primary);
+}
+
+#main-app-container {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+#main-app-container.hidden { display: none; }
