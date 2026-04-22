@@ -77,6 +77,11 @@ const state = {
   searchQuery: ''
 };
 
+function getBlockedJobs() {
+  const stored = localStorage.getItem('blocked_jobs');
+  return stored ? JSON.parse(stored) : [];
+}
+
 // UI Text Dictionary
 const i18n = {
   hi: {
@@ -199,7 +204,9 @@ function renderJobs() {
   JOB_DATA = loadJobs(); // Refresh latest if changed elsewhere
   jobListContainer.innerHTML = '';
   
+  const blockedIds = getBlockedJobs();
   const filteredJobs = JOB_DATA.filter(job => {
+    if (blockedIds.includes(job.id)) return false;
     const matchCategory = state.activeCategory === 'all' || job.category === state.activeCategory;
     const searchString = state.searchQuery || '';
     if (!searchString) return matchCategory;
@@ -250,10 +257,39 @@ function renderJobs() {
         <a href="https://wa.me/91${ADMIN_PHONE}?text=Hi Admin, I am interested in Job #${job.id} - ${jobTitle}" class="wa-btn" target="_blank">
           <i class="ri-whatsapp-fill"></i> WhatsApp
         </a>
+        <button class="btn-outline" style="color:var(--danger); border-color:var(--danger); padding:8px 12px; font-size:13px; margin-top:8px; width:100%; border-radius:8px;" onclick="reportAndBlockJob(${job.id})">
+          <i class="ri-error-warning-fill"></i> ${state.lang === 'hi' ? 'रिपोर्ट और ब्लॉक करें' : 'रिपोर्ट आणि ब्लॉक करा'}
+        </button>
       </div>
     `;
     jobListContainer.appendChild(card);
   });
+}
+
+function reportAndBlockJob(id) {
+  const comment = prompt(state.lang === 'hi' ? "रिपोर्ट करने का कारण (कमेंट) दर्ज करें:" : "रिपोर्ट करण्याचे कारण (टिप्पणी) प्रविष्ट करा:");
+  if (comment === null) return; // User canceled
+  
+  // 1. Add to local blocked list
+  const blocked = getBlockedJobs();
+  if (!blocked.includes(id)) {
+    blocked.push(id);
+    localStorage.setItem('blocked_jobs', JSON.stringify(blocked));
+  }
+  
+  // 2. Add comment to JOB_DATA for Admin
+  const job = JOB_DATA.find(j => j.id === id);
+  if (job) {
+    if (!job.reports) job.reports = [];
+    job.reports.push({
+      comment: comment || "No comment provided",
+      timestamp: new Date().toISOString()
+    });
+    saveJobs();
+  }
+  
+  showToast(state.lang === 'hi' ? 'काम को ब्लॉक और रिपोर्ट कर दिया गया है।' : 'काम ब्लॉक आणि रिपोर्ट केले आहे.');
+  renderJobs(); // Instantly hide
 }
 
 // ------------------------------

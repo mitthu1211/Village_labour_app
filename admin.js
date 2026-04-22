@@ -58,12 +58,26 @@ function loadAndRenderJobs() {
   jobs.forEach(job => {
     const title = job.title.hi || job.title; // Fallback in case of structure drift
     
+    // Check if reported
+    let reportedBadge = '';
+    let reportedComments = '';
+    if (job.reports && job.reports.length > 0) {
+      reportedBadge = `<span style="background:var(--danger); color:white; padding:2px 6px; border-radius:4px; font-size:10px; font-weight:bold; margin-left:6px;">Reported (${job.reports.length})</span>`;
+      const commentsHtml = job.reports.map(r => `• ${r.comment}`).join('<br>');
+      reportedComments = `<div style="margin-top:8px; padding:8px; background:#fef2f2; border-left:3px solid var(--danger); font-size:12px; color:#991b1b;"><strong>User Mentions:</strong><br>${commentsHtml}</div>`;
+    }
+
     const row = document.createElement('tr');
+    if (job.reports && job.reports.length > 0) {
+      row.style.backgroundColor = '#fff5f5'; // Light red background for easy spotting
+    }
+    
     row.innerHTML = `
       <td style="color:#64748b; font-size:13px;">#${job.id}</td>
       <td>
-        <strong>${title}</strong><br>
+        <strong>${title}</strong> ${reportedBadge}<br>
         <span style="color:#64748b; font-size:14px;">${job.desc}</span>
+        ${reportedComments}
       </td>
       <td style="font-weight:600; color:#0f172a;">+91 ${job.phone}</td>
       <td>${job.wage}</td>
