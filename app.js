@@ -6,6 +6,8 @@ const DEFAULT_JOBS = [
     desc: "कल 3 मज़दूर चाहिए गेहूं काटने के लिए।",
     wage: "₹400 / दिन",
     location: "2 किमी दूर - रामु का खेत",
+    lat: 19.0760,
+    lng: 72.8777,
     phone: "9876543210",
     category: "kheti"
   },
@@ -15,6 +17,8 @@ const DEFAULT_JOBS = [
     desc: "दीवार बनाने के लिए 1 मिस्त्री और 2 हेल्पर चाहिए।",
     wage: "₹600 / दिन",
     location: "4 किमी दूर - सरपंच घर",
+    lat: 19.0800,
+    lng: 72.8800,
     phone: "9876543211",
     category: "mistri"
   },
@@ -24,6 +28,8 @@ const DEFAULT_JOBS = [
     desc: "ट्रैक्टर के साथ जुताई का काम है।",
     wage: "₹500 / दिन",
     location: "1 किमी दूर - शिवम् का खेत",
+    lat: 19.0710,
+    lng: 72.8850,
     phone: "9876543212",
     category: "kheti"
   },
@@ -33,9 +39,18 @@ const DEFAULT_JOBS = [
     desc: "दुकान से 50 बोरी सीमेंट उतारना है।",
     wage: "₹350 / दिन",
     location: "0.5 किमी दूर - रामजी सेठ",
+    lat: 19.0750,
+    lng: 72.8700,
     phone: "9876543213",
     category: "majdoori"
   }
+];
+
+const DEFAULT_LABOURERS = [
+  { id: 101, name: "Suresh (Kheti)", lat: 19.0740, lng: 72.8790, category: "kheti" },
+  { id: 102, name: "Ramesh (Mistri)", lat: 19.0810, lng: 72.8750, category: "mistri" },
+  { id: 103, name: "Dinesh (Majdoor)", lat: 19.0720, lng: 72.8720, category: "majdoori" },
+  { id: 104, name: "Ganesh (Kheti)", lat: 19.0780, lng: 72.8880, category: "kheti" }
 ];
 
 function loadJobs() {
@@ -51,6 +66,9 @@ function saveJobs() {
 
 let JOB_DATA = loadJobs();
 
+// Admin Contact configuration
+const ADMIN_PHONE = "0000000000"; // All calls will be routed through this number
+
 // App State
 const state = {
   lang: 'hi', // 'hi' = Hindi, 'mr' = Marathi
@@ -63,6 +81,7 @@ const state = {
 const i18n = {
   hi: {
     findWork: 'काम ढूंढें',
+    mapVal: 'नक्शा',
     postJob: 'काम दें',
     profile: 'प्रोफाइल',
     greetTitle: 'आज का काम खोजें',
@@ -71,9 +90,11 @@ const i18n = {
     postTitle: 'काम पोस्ट करें',
     postSub: 'अपनी ज़रुरत बोलकर बताएं (जैसे: "मुझे कल खेती के लिए 2 लोग चाहिए")',
     recordStatus: 'बोलने के लिए दबाएं',
+    mapTitle: 'लाइव काम और मज़दूर (Live Map)',
   },
   mr: {
     findWork: 'काम शोधा',
+    mapVal: 'नकाशा',
     postJob: 'काम द्या',
     profile: 'प्रोफाइल',
     greetTitle: 'आजचे काम शोधा',
@@ -82,6 +103,7 @@ const i18n = {
     postTitle: 'काम पोस्ट करा',
     postSub: 'तुमची गरज बोलून सांगा (उदा: "मला उद्या शेतीसाठी 2 लोक पाहिजेत")',
     recordStatus: 'बोलण्यासाठी दाबा',
+    mapTitle: 'थेट काम आणि कामगार (Live Map)',
   }
 };
 
@@ -149,8 +171,12 @@ function updateLanguageUI() {
   
   // Bottom Nav
   document.getElementById('nav-find-work').textContent = dict.findWork;
+  if(document.getElementById('nav-map')) document.getElementById('nav-map').textContent = dict.mapVal;
   document.getElementById('nav-post-job').textContent = dict.postJob;
   document.getElementById('nav-profile').textContent = dict.profile;
+  
+  // Map Title
+  if(document.getElementById('map-title-text')) document.getElementById('map-title-text').textContent = dict.mapTitle;
   
   // Home
   document.getElementById('greet-text').textContent = dict.greetTitle;
@@ -198,6 +224,7 @@ function renderJobs() {
     const card = document.createElement('div');
     card.className = 'job-card';
     const jobTitle = state.lang === 'hi' ? job.title.hi : job.title.mr;
+    const adminLabel = state.lang === 'hi' ? '(एडमिन)' : '(अॅडमिन)';
     
     card.innerHTML = `
       <div class="job-header">
@@ -207,7 +234,7 @@ function renderJobs() {
             <i class="ri-map-pin-2-fill"></i> ${job.location}
           </div>
           <div class="job-meta" style="color: var(--primary-dark); font-weight: 700; margin-top: 6px;">
-            <i class="ri-phone-fill"></i> +91 ${job.phone}
+            <i class="ri-phone-fill"></i> +91 ${ADMIN_PHONE} ${adminLabel}
           </div>
         </div>
         <div class="job-wage">${job.wage}</div>
@@ -219,8 +246,8 @@ function renderJobs() {
       </button>
 
       <div class="job-actions">
-        <a href="tel:${job.phone}" class="call-btn"><i class="ri-phone-fill"></i>  कॉल करें</a>
-        <a href="https://wa.me/91${job.phone}?text=Mujhe aapka kaam karna hai" class="wa-btn" target="_blank">
+        <a href="tel:${ADMIN_PHONE}" class="call-btn"><i class="ri-phone-fill"></i>  कॉल करें</a>
+        <a href="https://wa.me/91${ADMIN_PHONE}?text=Hi Admin, I am interested in Job #${job.id} - ${jobTitle}" class="wa-btn" target="_blank">
           <i class="ri-whatsapp-fill"></i> WhatsApp
         </a>
       </div>
@@ -314,19 +341,35 @@ document.getElementById('confirm-post-btn').addEventListener('click', () => {
       showToast("Please provide job details first.");
       return;
     }
-    
-    showToast("Job Posted Successfully!");
-    
-    // Read category from dataset
+
     const autoCatEl = document.getElementById('auto-category-text');
     const selectedCategory = autoCatEl && autoCatEl.dataset.detected ? autoCatEl.dataset.detected : 'majdoori';
+    
+    // Try to get location
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => finalizePostJob(text, selectedCategory, pos.coords.latitude, pos.coords.longitude),
+        (err) => {
+          showToast("Location access denied. Using default map center.");
+          finalizePostJob(text, selectedCategory, 19.0760, 72.8777); // fallback
+        }
+      );
+    } else {
+      finalizePostJob(text, selectedCategory, 19.0760, 72.8777);
+    }
+});
 
+function finalizePostJob(text, selectedCategory, lat, lng) {
+    showToast("Job Posted Successfully!");
+    
     JOB_DATA.unshift({
         id: Date.now(),
         title: { hi: "नया काम", mr: "नवीन काम" },
         desc: text,
         wage: "बातचीत करें (Discuss)",
-        location: "Current Location",
+        location: "Live Location",
+        lat: lat,
+        lng: lng,
         phone: state.userPhone || "Not Provided",
         category: selectedCategory
     });
@@ -335,10 +378,53 @@ document.getElementById('confirm-post-btn').addEventListener('click', () => {
     
     document.getElementById('text-post-job').value = '';
     document.getElementById('post-result-card').classList.add('hidden');
-    // switch to home tab to show the new post
+    // switch to home tab
     navItems[0].click();
     renderJobs();
-});
+}
+
+// Map Logic
+let appMap = null;
+let mapMarkers = [];
+
+function initOrUpdateMap() {
+  if (typeof L === 'undefined') return; // Leaflet not loaded
+  
+  if (!appMap) {
+    appMap = L.map('map-container').setView([19.0760, 72.8777], 13);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap contributors'
+    }).addTo(appMap);
+  }
+
+  // Clear existing markers
+  mapMarkers.forEach(m => appMap.removeLayer(m));
+  mapMarkers = [];
+
+  // Custom Icons
+  const jobIcon = L.divIcon({ className: 'custom-div-icon', html: "<div style='background-color:#ef4444; color:white; border-radius:50%; width:28px; height:28px; display:flex; align-items:center; justify-content:center; border:2px solid white; box-shadow:0 2px 5px rgba(0,0,0,0.3);'><i class='ri-briefcase-4-fill'></i></div>", iconSize: [28, 28], iconAnchor: [14, 14] });
+  const labourIcon = L.divIcon({ className: 'custom-div-icon', html: "<div style='background-color:#22c55e; color:white; border-radius:50%; width:28px; height:28px; display:flex; align-items:center; justify-content:center; border:2px solid white; box-shadow:0 2px 5px rgba(0,0,0,0.3);'><i class='ri-user-smile-fill'></i></div>", iconSize: [28, 28], iconAnchor: [14, 14] });
+
+  // Add Job Markers (Red)
+  JOB_DATA.forEach(job => {
+    if (job.lat && job.lng) {
+      const marker = L.marker([job.lat, job.lng], { icon: jobIcon }).addTo(appMap);
+      const title = state.lang === 'hi' ? (job.title.hi || job.title) : (job.title.mr || job.title);
+      marker.bindPopup(`<b>💼 Job:</b> ${title}<br><b>Wage:</b> ${job.wage}<br><a href="tel:${ADMIN_PHONE}" style="color:var(--primary); font-weight:bold; margin-top:5px; display:block;">Call Admin</a>`);
+      mapMarkers.push(marker);
+    }
+  });
+
+  // Add Labour Markers (Green)
+  DEFAULT_LABOURERS.forEach(labour => {
+    const marker = L.marker([labour.lat, labour.lng], { icon: labourIcon }).addTo(appMap);
+    marker.bindPopup(`<b>🧑‍🌾 Available:</b><br>${labour.name}`);
+    mapMarkers.push(marker);
+  });
+  
+  // Refresh size (Fixes gray unrendered tiles on dynamic tab switch)
+  setTimeout(() => { appMap.invalidateSize(); }, 300);
+}
 
 // ------------------------------
 // Text-to-Speech Helper
