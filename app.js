@@ -82,35 +82,36 @@ function getBlockedJobs() {
   return stored ? JSON.parse(stored) : [];
 }
 
-// UI Text Dictionary
 const i18n = {
   hi: {
     findWork: 'काम ढूंढें',
     mapVal: 'नक्शा',
     postJob: 'काम दें',
     profile: 'प्रोफाइल',
-    greetTitle: 'आज का काम खोजें',
+    greetTitle: 'काम खोजें',
     greetSub: 'Voice-search कीजिये या नीचे scroll कीजिये।',
-    voiceSearchText: 'बोलकर काम ढूंढें',
+    voiceSearchText: 'बोलकर खोजें',
     postTitle: 'काम पोस्ट करें',
     postSub: 'अपनी ज़रुरत बोलकर बताएं (जैसे: "मुझे कल खेती के लिए 2 लोग चाहिए")',
     recordStatus: 'बोलने के लिए दबाएं',
     mapTitle: 'लाइव काम और मज़दूर (Live Map)',
   },
-  mr: {
-    findWork: 'काम शोधा',
-    mapVal: 'नकाशा',
-    postJob: 'काम द्या',
-    profile: 'प्रोफाइल',
-    greetTitle: 'आजचे काम शोधा',
-    greetSub: 'Voice-search करा किंवा खाली scroll करा.',
-    voiceSearchText: 'बोलून काम शोधा',
-    postTitle: 'काम पोस्ट करा',
-    postSub: 'तुमची गरज बोलून सांगा (उदा: "मला उद्या शेतीसाठी 2 लोक पाहिजेत")',
-    recordStatus: 'बोलण्यासाठी दाबा',
-    mapTitle: 'थेट काम आणि कामगार (Live Map)',
+  en: {
+    findWork: 'Find Work',
+    mapVal: 'Map',
+    postJob: 'Hire',
+    profile: 'Profile',
+    greetTitle: 'Find Jobs',
+    greetSub: 'Use voice search or filter below.',
+    voiceSearchText: 'Voice Search',
+    postTitle: 'Post a Job',
+    postSub: 'Speak your required job details clearly',
+    recordStatus: 'Tap to speak',
+    mapTitle: 'Live Map',
   }
 };
+
+let activeLocationFilter = 'all';
 
 // DOM Elements
 const sections = document.querySelectorAll('.view-section');
@@ -131,7 +132,6 @@ if (SpeechRecognition) {
 
 // ------------------------------
 // Filter Chips Logic
-// ------------------------------
 const filterChips = document.querySelectorAll('.filter-chip');
 filterChips.forEach(chip => {
   chip.addEventListener('click', () => {
@@ -141,6 +141,14 @@ filterChips.forEach(chip => {
     renderJobs();
   });
 });
+
+const locationSelect = document.getElementById('location-select');
+if (locationSelect) {
+  locationSelect.addEventListener('change', (e) => {
+    activeLocationFilter = e.target.value;
+    renderJobs();
+  });
+}
 
 // ------------------------------
 // Navigation Logic
@@ -163,16 +171,18 @@ navItems.forEach(item => {
 // ------------------------------
 // Multi-Language Logic
 // ------------------------------
+// Toggle Language
 langToggle.addEventListener('click', () => {
-  state.lang = state.lang === 'hi' ? 'mr' : 'hi';
+  state.lang = state.lang === 'hi' ? 'en' : 'hi';
+  langToggle.querySelector('span:nth-child(2)').textContent = state.lang === 'hi' ? 'हिन्दी' : 'English';
   updateLanguageUI();
+  renderJobs();
 });
 
 function updateLanguageUI() {
   const dict = i18n[state.lang];
   
   // Header Button
-  langToggle.querySelector('span:nth-child(2)').textContent = state.lang === 'hi' ? 'हिन्दी' : 'मराठी';
   
   // Bottom Nav
   document.getElementById('nav-find-work').textContent = dict.findWork;
@@ -184,9 +194,11 @@ function updateLanguageUI() {
   if(document.getElementById('map-title-text')) document.getElementById('map-title-text').textContent = dict.mapTitle;
   
   // Home
-  document.getElementById('greet-text').textContent = dict.greetTitle;
-  document.getElementById('greet-sub').textContent = dict.greetSub;
-  document.getElementById('voice-search-text').textContent = dict.voiceSearchText;
+  if(document.getElementById('greet-text')) document.getElementById('greet-text').textContent = dict.greetTitle;
+  if(document.getElementById('voice-search-text')) document.getElementById('voice-search-text').textContent = dict.voiceSearchText;
+  
+  if(document.getElementById('home-find-work')) document.getElementById('home-find-work').textContent = dict.findWork;
+  if(document.getElementById('home-hire-worker')) document.getElementById('home-hire-worker').textContent = state.lang === 'hi' ? 'मज़दूर बुलाएं (Hire)' : 'Hire Workers';
   
   // Post Job
   document.getElementById('post-title').textContent = dict.postTitle;
@@ -200,25 +212,47 @@ function updateLanguageUI() {
 // ------------------------------
 // Render Jobs
 // ------------------------------
-function renderJobs() {
-  JOB_DATA = loadJobs(); // Refresh latest if changed elsewhere
+async function renderJobs() {
+  try {
+    const res = await fetch(`/api/jobs?phone=${state.userPhone||''}`);
+    if (res.ok) {
+      JOB_DATA = await res.json();
+    } else {
+      JOB_DATA = loadJobs();
+    }
+  } catch(e) {
+    console.error(e);
+    JOB_DATA = loadJobs();
+  }
   jobListContainer.innerHTML = '';
   
-  const blockedIds = getBlockedJobs();
+  // Populate Location Dropdown
+  const locSelect = document.getElementById('location-select');
+  if (locSelect && locSelect.options.length <= 1) {
+    const locs = [...new Set(JOB_DATA.map(j => j.location))];
+    locs.forEach(l => {
+      const opt = document.createElement('option');
+      opt.value = l;
+      opt.textContent = l;
+      locSelect.appendChild(opt);
+    });
+  }
+
   const filteredJobs = JOB_DATA.filter(job => {
-    if (blockedIds.includes(job.id)) return false;
     const matchCategory = state.activeCategory === 'all' || job.category === state.activeCategory;
+    const locMatchDrop = activeLocationFilter === 'all' || job.location === activeLocationFilter;
+    
     const searchString = state.searchQuery || '';
-    if (!searchString) return matchCategory;
+    if (!searchString) return matchCategory && locMatchDrop;
     
     // check text match
     const titleObj = job.title;
-    const titleText = (titleObj.hi || '') + ' ' + (titleObj.mr || '') + ' ' + (typeof titleObj === 'string' ? titleObj : '');
+    const titleText = (titleObj.hi || '') + ' ' + (titleObj.en || '') + ' ' + (typeof titleObj === 'string' ? titleObj : '');
     const titleMatch = titleText.toLowerCase().includes(searchString);
     const descMatch = job.desc.toLowerCase().includes(searchString);
     const locMatch = job.location.toLowerCase().includes(searchString);
     
-    return matchCategory && (titleMatch || descMatch || locMatch);
+    return matchCategory && locMatchDrop && (titleMatch || descMatch || locMatch);
   });
 
   if (filteredJobs.length === 0) {
@@ -266,30 +300,27 @@ function renderJobs() {
   });
 }
 
-function reportAndBlockJob(id) {
-  const comment = prompt(state.lang === 'hi' ? "रिपोर्ट करने का कारण (कमेंट) दर्ज करें:" : "रिपोर्ट करण्याचे कारण (टिप्पणी) प्रविष्ट करा:");
+async function reportAndBlockJob(id) {
+  const comment = prompt(state.lang === 'hi' ? "रिपोर्ट करने का कारण (कमेंट) दर्ज करें:" : "Report reason:");
   if (comment === null) return; // User canceled
   
-  // 1. Add to local blocked list
-  const blocked = getBlockedJobs();
-  if (!blocked.includes(id)) {
-    blocked.push(id);
-    localStorage.setItem('blocked_jobs', JSON.stringify(blocked));
+  try {
+     await fetch(`/api/jobs/${id}/report`, {
+         method: 'POST',
+         headers: {'Content-Type': 'application/json'},
+         body: JSON.stringify({ comment: comment || "No comment provided" })
+     });
+     await fetch('/api/block', {
+         method: 'POST',
+         headers: {'Content-Type': 'application/json'},
+         body: JSON.stringify({ user_phone: state.userPhone, job_id: id })
+     });
+     showToast(state.lang === 'hi' ? 'काम को ब्लॉक और रिपोर्ट कर दिया गया है।' : 'Job reported & blocked.');
+     renderJobs(); 
+  } catch (e) {
+     console.error(e);
+     showToast('Network error.');
   }
-  
-  // 2. Add comment to JOB_DATA for Admin
-  const job = JOB_DATA.find(j => j.id === id);
-  if (job) {
-    if (!job.reports) job.reports = [];
-    job.reports.push({
-      comment: comment || "No comment provided",
-      timestamp: new Date().toISOString()
-    });
-    saveJobs();
-  }
-  
-  showToast(state.lang === 'hi' ? 'काम को ब्लॉक और रिपोर्ट कर दिया गया है।' : 'काम ब्लॉक आणि रिपोर्ट केले आहे.');
-  renderJobs(); // Instantly hide
 }
 
 // ------------------------------
@@ -395,12 +426,10 @@ document.getElementById('confirm-post-btn').addEventListener('click', () => {
     }
 });
 
-function finalizePostJob(text, selectedCategory, lat, lng) {
-    showToast("Job Posted Successfully!");
-    
-    JOB_DATA.unshift({
+async function finalizePostJob(text, selectedCategory, lat, lng) {
+    const newJob = {
         id: Date.now(),
-        title: { hi: "नया काम", mr: "नवीन काम" },
+        title: { hi: "नया काम", en: "New Job" },
         desc: text,
         wage: "बातचीत करें (Discuss)",
         location: "Live Location",
@@ -408,15 +437,23 @@ function finalizePostJob(text, selectedCategory, lat, lng) {
         lng: lng,
         phone: state.userPhone || "Not Provided",
         category: selectedCategory
-    });
+    };
     
-    saveJobs();
-    
-    document.getElementById('text-post-job').value = '';
-    document.getElementById('post-result-card').classList.add('hidden');
-    // switch to home tab
-    navItems[0].click();
-    renderJobs();
+    try {
+        await fetch('/api/jobs', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(newJob)
+        });
+        showToast("Job Posted Successfully!");
+        document.getElementById('text-post-job').value = '';
+        document.getElementById('post-result-card').classList.add('hidden');
+        navItems[0].click();
+        renderJobs();
+    } catch (e) {
+        console.error(e);
+        showToast("Server Error");
+    }
 }
 
 // Map Logic
@@ -486,12 +523,6 @@ function showToast(msg) {
 // ------------------------------
 const loginContainer = document.getElementById('login-container');
 const mainAppContainer = document.getElementById('main-app-container');
-const sendOtpBtn = document.getElementById('send-otp-btn');
-const verifyOtpBtn = document.getElementById('verify-otp-btn');
-const mobileInput = document.getElementById('mobile-input');
-const otpInput = document.getElementById('otp-input');
-const step1Phone = document.getElementById('step-1-phone');
-const step2Otp = document.getElementById('step-2-otp');
 const loginTitle = document.getElementById('login-title');
 const loginSub = document.getElementById('login-sub');
 
@@ -499,49 +530,60 @@ const loginSub = document.getElementById('login-sub');
 function updateLoginStrings() {
   if (state.lang === 'hi') {
     loginTitle.textContent = "लाग इन (Login)";
-    loginSub.textContent = "अपना मोबाइल नंबर दर्ज करें";
-    sendOtpBtn.textContent = "OTP भेजें";
-    verifyOtpBtn.textContent = "लॉगिन करें";
-    mobileInput.placeholder = "मोबाइल नंबर";
-    otpInput.placeholder = "OTP दर्ज करें";
+    loginSub.textContent = "अपना मोबाइल नंबर और नाम दर्ज करें";
+    document.getElementById('simple-login-btn').textContent = "लॉगिन करें (Enter)";
   } else {
     loginTitle.textContent = "लॉग इन (Login)";
-    loginSub.textContent = "तुमचा मोबाईल नंबर टाका";
-    sendOtpBtn.textContent = "OTP पाठवा";
-    verifyOtpBtn.textContent = "लॉगिन करा";
-    mobileInput.placeholder = "मोबाईल नंबर";
-    otpInput.placeholder = "OTP टाका";
+    loginSub.textContent = "तुमचा मोबाईल नंबर आणि नाव टाका";
+    document.getElementById('simple-login-btn').textContent = "लॉगिन करा (Enter)";
   }
 }
 
 langToggle.addEventListener('click', updateLoginStrings);
 
-sendOtpBtn.addEventListener('click', () => {
-  if (mobileInput.value.length === 10) {
-    step1Phone.classList.add('hidden');
-    step2Otp.classList.remove('hidden');
-    showToast('OTP भेजा गया: 1234');
+document.getElementById('simple-login-btn').addEventListener('click', async () => {
+    const phone = document.getElementById('mobile-input').value;
+    const name = document.getElementById('name-input').value || 'User';
+    const role = document.getElementById('role-input').value;
     
-    // Switch title
-    loginTitle.textContent = state.lang === 'hi' ? 'OTP दर्ज करें' : 'OTP टाका';
-    loginSub.textContent = '+91 ' + mobileInput.value + ' पर OTP भेजा गया';
-  } else {
-    showToast(state.lang === 'hi' ? 'कृपया सही मोबाइल नंबर डालें' : 'कृपया योग्य मोबाईल नंबर टाका');
-  }
-});
-
-verifyOtpBtn.addEventListener('click', () => {
-  if (otpInput.value === '1234') {
-    state.userPhone = mobileInput.value;
-    localStorage.setItem('userPhone', state.userPhone);
+    if (phone.length !== 10) {
+        showToast(state.lang === 'hi' ? 'कृपया 10 अंकों का मोबाइल नंबर दर्ज करें' : 'Please enter 10 digit number');
+        return;
+    }
+    
+    state.userPhone = phone;
+    localStorage.setItem('userPhone', phone);
+    
+    // Save generic profile
+    const profile = {
+        role: role,
+        name: name,
+        skill: role === 'worker' ? 'मज़दूर' : 'None',
+        business: role === 'employer' ? 'Company' : 'None',
+        location: 'City/Village',
+        exp: '0',
+        phone: phone
+    };
+    
+    try {
+        await fetch('/api/profile', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(profile)
+        });
+    } catch(e) {
+        console.error("Backend offline, utilizing local storage fallback.");
+    }
+    
+    localStorage.setItem('user_profile', JSON.stringify(profile));
+    
     loginContainer.classList.add('hidden');
     mainAppContainer.classList.remove('hidden');
     showToast('लॉगिन सफल (Login Success)');
+    renderProfilePage();
     renderJobs();
-  } else {
-    showToast(state.lang === 'hi' ? 'गलत OTP (Incorrect OTP)' : 'चुकीचा OTP');
-  }
 });
+
 
 // Init Login Strings
 updateLoginStrings();
@@ -569,11 +611,38 @@ document.getElementById('text-post-job').addEventListener('input', (e) => {
   }
 });
 
+function renderProfilePage() {
+  const profileStr = localStorage.getItem('user_profile');
+  if (!profileStr) return;
+  const p = JSON.parse(profileStr);
+  
+  if (document.getElementById('prof-name')) document.getElementById('prof-name').textContent = p.name;
+  
+  if (p.role === 'worker') {
+    if (document.getElementById('prof-role')) document.getElementById('prof-role').textContent = 'Skill: ' + p.skill;
+    if (document.getElementById('stat1-val')) {
+      document.getElementById('stat1-val').textContent = p.exp;
+      document.getElementById('stat1-label').textContent = 'Experience';
+    }
+  } else {
+    if (document.getElementById('prof-role')) document.getElementById('prof-role').textContent = 'Business: ' + p.business;
+    if (document.getElementById('stat1-val')) {
+      document.getElementById('stat1-val').textContent = "Owner";
+      document.getElementById('stat1-label').textContent = 'Business type';
+    }
+  }
+  
+  if (document.getElementById('prof-loc')) document.getElementById('prof-loc').innerHTML = `<i class="ri-map-pin-line"></i> ${p.location}`;
+  if (document.getElementById('stat2-val')) document.getElementById('stat2-val').textContent = '+91 ' + p.phone;
+}
+
 // Check session / focus on load
-if (state.userPhone) {
+if (state.userPhone && localStorage.getItem('user_profile')) {
   loginContainer.classList.add('hidden');
   mainAppContainer.classList.remove('hidden');
+  renderProfilePage();
 } else {
+  const mobileInput = document.getElementById('mobile-input');
   if(mobileInput) mobileInput.focus();
 }
 

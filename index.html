@@ -13,27 +13,32 @@
 
   <!-- Login Overlay -->
   <div id="login-container" class="login-wrapper">
-    <div class="login-box">
-      <div class="logo-large">
-        <i class="ri-plant-fill"></i>
-        <h1>Gaon Ka Kaam</h1>
+    <div class="login-box" style="border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); padding: 40px 20px;">
+      <div class="logo-large" style="margin-bottom: 20px; color: var(--primary);">
+        <i class="ri-plant-fill" style="font-size: 60px; line-height: 1;"></i>
+        <h1 style="font-size: 24px; font-weight: 700; color: var(--primary-dark);">Gaon Ka Kaam</h1>
       </div>
-      <h2 id="login-title">लाग इन (Login)</h2>
-      <p id="login-sub">अपना मोबाइल नंबर दर्ज करें</p>
+      <h2 id="login-title" style="font-size: 22px; color: var(--text-dark); margin-bottom: 8px;">लाग इन (Login)</h2>
+      <p id="login-sub" style="color: var(--text-light); font-size: 15px; margin-bottom: 30px;">अपना मोबाइल नंबर दर्ज करें</p>
       
-      <div id="step-1-phone">
-        <div class="input-group">
-          <span class="country-code">+91</span>
-          <input type="tel" id="mobile-input" placeholder="मोबाइल नंबर" maxlength="10" oninput="this.value=this.value.replace(/[^0-9]/g,'');">
+      <!-- Unified Simple Login Form -->
+      <div id="simple-login-form" style="text-align: left; display: flex; flex-direction: column; gap: 15px;">
+        <div class="input-group" style="display: flex; align-items: center; border: 2px solid var(--border-color); border-radius: 30px; background: #f8fafc; overflow: hidden;">
+          <span class="country-code" style="padding: 15px; background: #f1f5f9; border-right: 1px solid var(--border-color); color: var(--text-dark); font-weight: 600;">+91</span>
+          <input type="tel" id="mobile-input" placeholder="मोबाइल नंबर (Mobile)" maxlength="10" oninput="this.value=this.value.replace(/[^0-9]/g,'');" style="flex: 1; border: none; padding: 15px; font-size: 16px; background: transparent; outline: none;">
         </div>
-        <button id="send-otp-btn" class="btn-primary" style="margin-top: 20px;">OTP भेजें</button>
+        <div>
+          <input type="text" id="name-input" placeholder="आपका नाम (Name)" style="width:100%; padding:15px; border:2px solid var(--border-color); border-radius:30px; font-size:16px; outline: none; background: #f8fafc;">
+        </div>
+        <div>
+          <select id="role-input" style="width:100%; padding:15px; border:2px solid var(--border-color); border-radius:30px; font-size:16px; background:#f8fafc; outline: none; color: var(--text-dark); appearance: none;">
+            <option value="worker">मैं मज़दूर हूँ (Worker)</option>
+            <option value="employer">मुझे मज़दूर चाहिए (Employer)</option>
+          </select>
+        </div>
+        <button id="simple-login-btn" class="btn-primary" style="margin-top: 10px; padding: 15px; border-radius: 30px; font-size: 16px; transform: none;">लॉगिन करें (Enter)</button>
       </div>
 
-      <div id="step-2-otp" class="hidden">
-        <p style="color: var(--text-light); margin-bottom: 15px; font-size: 13px;">(डेमो के लिए OTP: 1234 डालें)</p>
-        <input type="tel" id="otp-input" placeholder="OTP दर्ज करें" class="large-input" maxlength="4" oninput="this.value=this.value.replace(/[^0-9]/g,'');">
-        <button id="verify-otp-btn" class="btn-primary" style="margin-top: 20px;">कन्फर्म करें</button>
-      </div>
     </div>
   </div>
 
@@ -57,26 +62,57 @@
 
     <!-- TAB 1: Home / Find Work -->
     <section id="tab-home" class="view-section active">
-      <div class="search-banner">
-        <h2 id="greet-text">आज का काम खोजें</h2>
-        <p id="greet-sub">Voice-search kijiye ya neeche scroll kijiye.</p>
-        
-        <button id="voice-search-btn" class="big-voice-btn">
-          <i class="ri-mic-fill"></i>
-          <span id="voice-search-text">बोलकर काम ढूंढें</span>
+      
+      <!-- Huge Action Cards for Home -->
+      <div style="display: flex; gap: 12px; padding: 16px; background: white; border-bottom: 1px solid var(--border-color);">
+        <button class="btn-primary" style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding: 24px; font-size: 18px; border-radius: 16px; box-shadow: 0 4px 15px rgba(29, 168, 95, 0.2);" onclick="document.querySelector('[data-target=\'tab-home\']').click();">
+          <i class="ri-search-eye-line" style="font-size: 32px; margin-bottom:8px;"></i>
+          <span id="home-find-work">काम ढूंढें (Work)</span>
         </button>
+        <button class="btn-primary" style="flex:1; background: var(--secondary); display:flex; flex-direction:column; align-items:center; justify-content:center; padding: 24px; font-size: 18px; border-radius: 16px; box-shadow: 0 4px 15px rgba(230, 126, 34, 0.2);" onclick="document.querySelector('[data-target=\'tab-post\']').click();">
+          <i class="ri-user-add-fill" style="font-size: 32px; margin-bottom:8px;"></i>
+          <span id="home-hire-worker">मज़दूर बुलाएं (Hire)</span>
+        </button>
+      </div>
+
+      <div class="search-banner">
+        <h2 id="greet-text">काम खोजें</h2>
         
-        <div style="margin-top: 15px;">
-          <input type="text" id="text-search-work" placeholder="या लिखकर खोजें (Or type to search)..." style="width: 100%; padding: 12px 16px; border-radius: 30px; border: 1px solid var(--border-color); outline: none; font-size: 15px; text-align: center; background: #f8fafc;">
+        <div style="margin-top: 10px; display:flex; gap:10px;">
+          <input type="text" id="text-search-work" placeholder="टाइप करें (Search)..." style="flex:1; padding: 12px 16px; border-radius: 12px; border: 1px solid var(--border-color); outline: none; font-size: 15px; background: #f8fafc;">
+          <select id="location-select" style="padding: 12px; border-radius: 12px; border: 1px solid var(--border-color); font-size:14px; background:white; color:var(--text-dark); max-width: 120px; outline:none;">
+            <option value="all">सब शहर</option>
+          </select>
         </div>
 
+        <button id="voice-search-btn" class="big-voice-btn" style="margin-top:15px; border-radius:12px;">
+          <i class="ri-mic-fill"></i>
+          <span id="voice-search-text">बोलकर खोजें</span>
+        </button>
         <p id="voice-feedback" class="voice-feedback hidden"></p>
         
-        <div class="filters">
-          <button class="filter-chip active" data-category="all">सब</button>
-          <button class="filter-chip" data-category="kheti">खेती</button>
-          <button class="filter-chip" data-category="majdoori">मज़दूरी</button>
-          <button class="filter-chip" data-category="mistri">मिस्त्री</button>
+        <!-- Icon Categories -->
+        <style>
+          .filter-chip.active .icon-circle { background: var(--primary) !important; color: white !important; }
+          .filter-chip.active span { color: var(--primary) !important; }
+        </style>
+        <div class="filters" style="display:grid; grid-template-columns: repeat(4, 1fr); gap:10px; margin-top:20px; text-align:center; overflow:hidden;">
+          <div class="filter-chip active" data-category="all" style="background:transparent; border:none; padding:0; height:auto; overflow:visible;">
+            <div class="icon-circle" style="width:50px; height:50px; background:#f1f5f9; border-radius:50%; margin:0 auto; display:flex; align-items:center; justify-content:center; font-size:24px; color:var(--text-dark); transition: 0.2s;"><i class="ri-apps-2-fill"></i></div>
+            <span style="font-size:12px; font-weight:600; display:block; margin-top:6px; color:var(--text-dark);">सब (All)</span>
+          </div>
+          <div class="filter-chip" data-category="majdoori" style="background:transparent; border:none; padding:0; height:auto; overflow:visible;">
+            <div class="icon-circle" style="width:50px; height:50px; background:#f1f5f9; border-radius:50%; margin:0 auto; display:flex; align-items:center; justify-content:center; font-size:24px; color:var(--text-dark); transition: 0.2s;"><i class="ri-hammer-fill"></i></div>
+            <span style="font-size:12px; font-weight:600; display:block; margin-top:6px; color:var(--text-dark);">मज़दूर</span>
+          </div>
+          <div class="filter-chip" data-category="mistri" style="background:transparent; border:none; padding:0; height:auto; overflow:visible;">
+            <div class="icon-circle" style="width:50px; height:50px; background:#f1f5f9; border-radius:50%; margin:0 auto; display:flex; align-items:center; justify-content:center; font-size:24px; color:var(--text-dark); transition: 0.2s;"><i class="ri-home-gear-fill"></i></div>
+            <span style="font-size:12px; font-weight:600; display:block; margin-top:6px; color:var(--text-dark);">मिस्त्री</span>
+          </div>
+          <div class="filter-chip" data-category="plumber" style="background:transparent; border:none; padding:0; height:auto; overflow:visible;">
+            <div class="icon-circle" style="width:50px; height:50px; background:#f1f5f9; border-radius:50%; margin:0 auto; display:flex; align-items:center; justify-content:center; font-size:24px; color:var(--text-dark); transition: 0.2s;"><i class="ri-tools-fill"></i></div>
+            <span style="font-size:12px; font-weight:600; display:block; margin-top:6px; color:var(--text-dark);">प्लम्बर</span>
+          </div>
         </div>
       </div>
 
@@ -124,9 +160,9 @@
         <div class="avatar">
           <i class="ri-user-fill"></i>
         </div>
-        <h2>Ramesh Kumar</h2>
-        <p class="role">Mazdoor / Kisaan</p>
-        <span class="rating"><i class="ri-star-fill"></i> 4.8 (12 Kaam)</span>
+        <h2 id="prof-name">Ramesh Kumar</h2>
+        <p class="role" id="prof-role">Mazdoor / Kisaan</p>
+        <span class="rating" id="prof-loc"><i class="ri-map-pin-line"></i> Village</span>
       </div>
 
       <div class="profile-actions">
@@ -137,12 +173,12 @@
 
       <div class="stats-card">
         <div class="stat">
-          <h4>30</h4>
-          <span>Dihadi (Days)</span>
+          <h4 id="stat1-val">0</h4>
+          <span id="stat1-label">Experience</span>
         </div>
         <div class="stat">
-          <h4>₹450</h4>
-          <span>Daily Rate</span>
+          <h4 id="stat2-val">+91</h4>
+          <span id="stat2-label">Phone</span>
         </div>
       </div>
 
@@ -207,6 +243,11 @@
 
   <!-- Modals / Overlays (Audio Setup) -->
   <div id="toast" class="toast hidden">Action successful</div>
+
+  <!-- Sticky WhatsApp Button -->
+  <a href="https://wa.me/919818208463?text=Hi" class="floating-wa" target="_blank" style="position:fixed; bottom:80px; right:20px; background:#25D366; color:white; width:60px; height:60px; border-radius:50%; display:flex; justify-content:center; align-items:center; font-size:32px; box-shadow:0 6px 16px rgba(37,211,102,0.4); z-index:999; text-decoration:none; transition:0.2s;">
+    <i class="ri-whatsapp-fill"></i>
+  </a>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   <script src="app.js"></script>
