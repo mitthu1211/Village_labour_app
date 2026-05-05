@@ -47,7 +47,7 @@ html, body {
 }
 
 #toast {
-  position: fixed;
+  position: absolute;
   bottom: 80px;
   left: 50%;
   transform: translateX(-50%);
@@ -57,7 +57,7 @@ html, body {
   border-radius: 20px;
   font-size: 14px;
   transition: opacity 0.3s ease;
-  z-index: 1000;
+  z-index: 9999;
 }
 .toast.hidden {
   opacity: 0;
@@ -501,7 +501,7 @@ html, body {
 .login-wrapper {
   position: absolute;
   top: 0; left: 0; right: 0; bottom: 0;
-  background: var(--primary);
+  background: white;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -514,10 +514,10 @@ html, body {
   background: white;
   width: 100%;
   max-width: 400px;
-  padding: 40px 20px;
-  border-radius: 20px;
+  padding: 20px;
+  border-radius: 0;
   text-align: center;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+  box-shadow: none;
 }
 
 .logo-large {

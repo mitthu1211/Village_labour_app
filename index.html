@@ -197,22 +197,17 @@
             <p style="font-size: 12px; color: var(--text-light);"><i class="ri-map-pin-2-line"></i> <span id="profile-location">Location Not Set</span></p>
           </div>
         </div>
-        
         <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 15px; border-top: 1px solid var(--border-color); padding-top: 15px;">
           <span class="rating" id="profile-rating" style="font-size: 13px;"><i class="ri-star-fill"></i> New User (0)</span>
-          <button class="btn-outline" style="padding: 6px 12px; min-height: 32px; width: auto; font-size: 13px; border-radius: 8px;">
-            <i class="ri-edit-2-line"></i> Edit Profile
-          </button>
+          <div style="display: flex; gap: 10px;">
+            <button class="btn-outline" id="voice-profile-btn" style="padding: 6px 12px; min-height: 32px; width: auto; font-size: 13px; border-radius: 8px;">
+              <i class="ri-mic-fill"></i> Voice
+            </button>
+            <button class="btn-outline" style="padding: 6px 12px; min-height: 32px; width: auto; font-size: 13px; border-radius: 8px;">
+              <i class="ri-edit-2-line"></i> Edit
+            </button>
+          </div>
         </div>
-      </div>
-
-      <div class="profile-actions" style="display: flex; gap: 10px; margin-bottom: 10px; margin-top: 10px;">
-        <button class="btn-outline" style="flex: 1;" id="voice-profile-btn">
-          <i class="ri-mic-fill"></i> Voice Profile
-        </button>
-        <button class="btn-outline" style="flex: 1; border-color: #ef4444; color: #ef4444;" id="logout-btn">
-          <i class="ri-logout-box-r-line"></i> Logout
-        </button>
       </div>
 
       <div class="stats-card">
@@ -258,6 +253,12 @@
             <i class="ri-whatsapp-fill"></i> Chat
           </a>
         </div>
+      </div>
+      
+      <div style="padding: 20px; text-align: center; margin-bottom: 20px;">
+        <button id="logout-btn" class="btn-outline" style="width: 100%; border-color: #ef4444; color: #ef4444; font-weight: bold; background: white;">
+          <i class="ri-logout-box-r-line"></i> लॉगआउट करें (Logout)
+        </button>
       </div>
     </section>
 
