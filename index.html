@@ -10,7 +10,7 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
 </head>
 <body>
-
+  <div id="app-wrapper">
   <!-- Auth Overlay -->
   <div id="login-container" class="login-wrapper">
     <div class="login-box" id="auth-box">
@@ -105,10 +105,12 @@
   <!-- Top Header -->
   <header class="app-header">
     <div class="logo">
+      <i class="ri-menu-line ri-lg" style="margin-right: 5px; cursor: pointer;"></i>
       <i class="ri-plant-fill ri-lg"></i>
       <h1>Gaon Ka Kaam</h1>
     </div>
-    <div class="header-actions">
+    <div class="header-actions" style="display: flex; align-items: center; gap: 12px;">
+      <i class="ri-notification-3-line ri-lg" style="cursor: pointer;"></i>
       <button id="lang-toggle" class="lang-btn">
         <span class="lang-text">A/अ</span>
         <span>हिन्दी</span>
@@ -184,17 +186,27 @@
 
     <!-- TAB 3: Profile -->
     <section id="tab-profile" class="view-section hidden">
-      <div class="profile-header">
-        <div class="avatar">
-          <i class="ri-user-fill" id="profile-avatar-icon"></i>
+      <div class="profile-header" style="padding: 20px 15px;">
+        <div style="display: flex; align-items: center; gap: 15px; text-align: left;">
+          <div class="avatar" style="width: 60px; height: 60px; margin: 0; font-size: 30px;">
+            <i class="ri-user-fill" id="profile-avatar-icon"></i>
+          </div>
+          <div style="flex: 1;">
+            <h2 id="profile-user-name" style="font-size: 18px; margin-bottom: 2px;">Guest User</h2>
+            <p class="role" id="profile-role" style="font-size: 13px; margin-bottom: 2px;">User</p>
+            <p style="font-size: 12px; color: var(--text-light);"><i class="ri-map-pin-2-line"></i> <span id="profile-location">Location Not Set</span></p>
+          </div>
         </div>
-        <h2 id="profile-user-name">Guest User</h2>
-        <p class="role" id="profile-role">User</p>
-        <p style="font-size: 13px; color: var(--text-light); margin-top: 5px;"><i class="ri-map-pin-2-line"></i> <span id="profile-location">Location Not Set</span></p>
-        <span class="rating" id="profile-rating"><i class="ri-star-fill"></i> New User (0 Kaam)</span>
+        
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 15px; border-top: 1px solid var(--border-color); padding-top: 15px;">
+          <span class="rating" id="profile-rating" style="font-size: 13px;"><i class="ri-star-fill"></i> New User (0)</span>
+          <button class="btn-outline" style="padding: 6px 12px; min-height: 32px; width: auto; font-size: 13px; border-radius: 8px;">
+            <i class="ri-edit-2-line"></i> Edit Profile
+          </button>
+        </div>
       </div>
 
-      <div class="profile-actions" style="display: flex; gap: 10px; margin-bottom: 20px;">
+      <div class="profile-actions" style="display: flex; gap: 10px; margin-bottom: 10px; margin-top: 10px;">
         <button class="btn-outline" style="flex: 1;" id="voice-profile-btn">
           <i class="ri-mic-fill"></i> Voice Profile
         </button>
@@ -249,25 +261,38 @@
       </div>
     </section>
 
+    <!-- TAB 4: Chat (Placeholder) -->
+    <section id="tab-chat" class="view-section hidden" style="padding: 20px; text-align: center;">
+      <i class="ri-message-3-line" style="font-size: 40px; color: var(--text-light); margin-bottom: 15px; display: block;"></i>
+      <h3 style="color: var(--text-dark); margin-bottom: 10px;">Messages</h3>
+      <p style="color: var(--text-light); font-size: 14px;">No new messages.</p>
+    </section>
+
   </main>
 
   <!-- Bottom Navigation -->
   <nav class="bottom-nav">
     <button class="nav-item active" data-target="tab-home">
       <i class="ri-home-5-fill"></i>
-      <span id="nav-find-work">काम ढूंढें</span>
+      <span id="nav-find-work">Home</span>
     </button>
     <button class="nav-item" id="nav-map-btn" data-target="tab-map">
-      <i class="ri-map-pin-fill"></i>
-      <span id="nav-map">नक्शा</span>
+      <i class="ri-briefcase-4-fill"></i>
+      <span id="nav-map">Jobs</span>
     </button>
-    <button class="nav-item" data-target="tab-post">
-      <i class="ri-add-circle-fill"></i>
-      <span id="nav-post-job">काम दें</span>
+    
+    <button class="fab-center" id="fab-voice-btn">
+      <i class="ri-mic-fill"></i>
     </button>
+    <div class="nav-spacer"></div>
+
     <button class="nav-item" data-target="tab-profile">
       <i class="ri-user-3-fill"></i>
-      <span id="nav-profile">प्रोफाइल</span>
+      <span id="nav-profile">Profile</span>
+    </button>
+    <button class="nav-item" data-target="tab-chat">
+      <i class="ri-message-3-fill"></i>
+      <span id="nav-chat">Chat</span>
     </button>
   </nav>
 
@@ -278,5 +303,6 @@
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   <script src="app.js"></script>
+  </div> <!-- End app-wrapper -->
 </body>
 </html>

@@ -332,11 +332,26 @@ function handleVoiceRecording(btnElement, textOutputElement, langCode, isPostJob
 }
 
 // Attach bindings for Home Voice Search
-document.getElementById('voice-search-btn').addEventListener('click', function() {
-  const fb = document.getElementById('voice-feedback');
-  const langCode = state.lang === 'hi' ? 'hi-IN' : 'mr-IN';
-  handleVoiceRecording(this, fb, langCode, false);
-});
+const homeVoiceBtn = document.getElementById('voice-search-btn');
+if (homeVoiceBtn) {
+  homeVoiceBtn.addEventListener('click', function() {
+    const fb = document.getElementById('voice-feedback');
+    const langCode = state.lang === 'hi' ? 'hi-IN' : 'mr-IN';
+    handleVoiceRecording(this, fb, langCode, false);
+  });
+}
+
+// Attach bindings for FAB Voice
+const fabVoiceBtn = document.getElementById('fab-voice-btn');
+if (fabVoiceBtn) {
+  fabVoiceBtn.addEventListener('click', function() {
+    const fb = document.getElementById('voice-feedback');
+    const langCode = state.lang === 'hi' ? 'hi-IN' : 'mr-IN';
+    // Switch to home tab if not already there, since search is there
+    navItems[0].click(); 
+    handleVoiceRecording(this, fb, langCode, false);
+  });
+}
 
 // Attach bindings for Post Job
 document.getElementById('record-job-btn').addEventListener('click', function() {
