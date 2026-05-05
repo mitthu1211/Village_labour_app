@@ -631,6 +631,37 @@ if (state.currentUser) {
   if(loginMobile) loginMobile.focus();
 }
 
+// Side Menu Logic
+const menuBtn = document.getElementById('menu-btn');
+const sideMenuOverlay = document.getElementById('side-menu-overlay');
+
+if (menuBtn && sideMenuOverlay) {
+  menuBtn.addEventListener('click', () => {
+    sideMenuOverlay.classList.add('active');
+  });
+  
+  sideMenuOverlay.addEventListener('click', (e) => {
+    // Close if clicking outside the menu panel
+    if (e.target === sideMenuOverlay) {
+      sideMenuOverlay.classList.remove('active');
+    }
+  });
+
+  // Link clicks should close menu and navigate
+  const menuLinks = sideMenuOverlay.querySelectorAll('.side-menu-links a');
+  menuLinks.forEach(link => {
+    link.addEventListener('click', (e) => {
+      e.preventDefault();
+      sideMenuOverlay.classList.remove('active');
+      const id = link.id;
+      if (id === 'menu-home') navItems[0].click();
+      if (id === 'menu-jobs') navItems[1].click();
+      if (id === 'menu-profile') navItems[3].click();
+      if (id === 'menu-chat') navItems[4].click();
+    });
+  });
+}
+
 // Init Application
 updateLanguageUI();
 renderJobs();

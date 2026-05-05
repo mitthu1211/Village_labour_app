@@ -105,7 +105,7 @@
   <!-- Top Header -->
   <header class="app-header">
     <div class="logo">
-      <i class="ri-menu-line ri-lg" style="margin-right: 5px; cursor: pointer;"></i>
+      <i class="ri-menu-line ri-lg" id="menu-btn" style="margin-right: 5px; cursor: pointer;"></i>
       <i class="ri-plant-fill ri-lg"></i>
       <h1>Gaon Ka Kaam</h1>
     </div>
@@ -298,6 +298,23 @@
   </nav>
 
   </div> <!-- End main-app-container -->
+
+  <!-- Side Menu -->
+  <div id="side-menu-overlay" class="side-menu-overlay">
+    <div class="side-menu">
+      <div class="side-menu-header">
+        <h2>Gaon Ka Kaam</h2>
+        <p style="font-size: 13px; opacity: 0.8;">Village Jobs App</p>
+      </div>
+      <div class="side-menu-links">
+        <a href="#" id="menu-home"><i class="ri-home-5-fill"></i> Home</a>
+        <a href="#" id="menu-jobs"><i class="ri-briefcase-4-fill"></i> Jobs</a>
+        <a href="#" id="menu-profile"><i class="ri-user-3-fill"></i> Profile</a>
+        <a href="#" id="menu-chat"><i class="ri-message-3-fill"></i> Chat</a>
+        <a href="#" id="menu-support"><i class="ri-customer-service-2-fill"></i> Support</a>
+      </div>
+    </div>
+  </div>
 
   <!-- Modals / Overlays (Audio Setup) -->
   <div id="toast" class="toast hidden">Action successful</div>
