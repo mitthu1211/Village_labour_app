@@ -72,11 +72,20 @@ const ADMIN_PHONE = "0000000000"; // All calls will be routed through this numbe
 // App State
 const state = {
   lang: 'hi', // 'hi' = Hindi, 'mr' = Marathi
-  userPhone: localStorage.getItem('userPhone') || null,
-  userName: localStorage.getItem('userName') || 'Ramesh Kumar',
+  currentUser: JSON.parse(localStorage.getItem('currentUser')) || null,
   activeCategory: 'all',
   searchQuery: ''
 };
+
+// Users Database (localStorage)
+function getUsers() {
+  const users = localStorage.getItem('gaon_users');
+  return users ? JSON.parse(users) : [];
+}
+
+function saveUsers(users) {
+  localStorage.setItem('gaon_users', JSON.stringify(users));
+}
 
 // UI Text Dictionary
 const i18n = {
@@ -451,74 +460,129 @@ function showToast(msg) {
 // ------------------------------
 const loginContainer = document.getElementById('login-container');
 const mainAppContainer = document.getElementById('main-app-container');
-const sendOtpBtn = document.getElementById('send-otp-btn');
-const verifyOtpBtn = document.getElementById('verify-otp-btn');
-const mobileInput = document.getElementById('mobile-input');
-const nameInput = document.getElementById('name-input');
-const otpInput = document.getElementById('otp-input');
-const step1Phone = document.getElementById('step-1-phone');
-const step2Otp = document.getElementById('step-2-otp');
-const loginTitle = document.getElementById('login-title');
-const loginSub = document.getElementById('login-sub');
 
-// Update Login UI based on Lang
-function updateLoginStrings() {
-  if (state.lang === 'hi') {
-    loginTitle.textContent = "लाग इन (Login)";
-    loginSub.textContent = "अपना मोबाइल नंबर दर्ज करें";
-    sendOtpBtn.textContent = "OTP भेजें";
-    verifyOtpBtn.textContent = "लॉगिन करें";
-    mobileInput.placeholder = "मोबाइल नंबर";
-    otpInput.placeholder = "OTP दर्ज करें";
-  } else {
-    loginTitle.textContent = "लॉग इन (Login)";
-    loginSub.textContent = "तुमचा मोबाईल नंबर टाका";
-    sendOtpBtn.textContent = "OTP पाठवा";
-    verifyOtpBtn.textContent = "लॉगिन करा";
-    mobileInput.placeholder = "मोबाईल नंबर";
-    otpInput.placeholder = "OTP टाका";
-  }
+// View Toggle
+const loginView = document.getElementById('login-view');
+const signupView = document.getElementById('signup-view');
+document.getElementById('show-signup-link').addEventListener('click', (e) => { e.preventDefault(); loginView.classList.add('hidden'); signupView.classList.remove('hidden'); });
+document.getElementById('show-login-link').addEventListener('click', (e) => { e.preventDefault(); signupView.classList.add('hidden'); loginView.classList.remove('hidden'); });
+
+// Login Elements
+const loginMobile = document.getElementById('login-mobile');
+const loginPassword = document.getElementById('login-password');
+const loginBtn = document.getElementById('login-btn');
+const forgotPwdLink = document.getElementById('forgot-password-link');
+
+// Signup Elements
+const signupName = document.getElementById('signup-name');
+const signupMobile = document.getElementById('signup-mobile');
+const signupPassword = document.getElementById('signup-password');
+const signupRole = document.getElementById('signup-role');
+const signupVillage = document.getElementById('signup-village');
+const signupDistrict = document.getElementById('signup-district');
+const signupState = document.getElementById('signup-state');
+const signupSkills = document.getElementById('signup-skills');
+const signupBtn = document.getElementById('signup-btn');
+
+forgotPwdLink.addEventListener('click', (e) => { e.preventDefault(); showToast('पासवर्ड रीसेट लिंक आपके नंबर पर भेजा गया (Password reset link sent)'); });
+
+// Auth Functions
+function updateProfileUI() {
+  if (!state.currentUser) return;
+  const u = state.currentUser;
+  
+  const nameEl = document.getElementById('profile-user-name');
+  const roleEl = document.getElementById('profile-role');
+  const locationEl = document.getElementById('profile-location');
+  const ratingEl = document.getElementById('profile-rating');
+  
+  if (nameEl) nameEl.textContent = u.name;
+  if (roleEl) roleEl.textContent = u.role === 'worker' ? 'मज़दूर (Worker)' : 'किसान/मालिक (Employer)';
+  if (locationEl) locationEl.textContent = `${u.village || 'Unknown'}, ${u.district || 'Location'}`;
+  if (ratingEl) ratingEl.innerHTML = '<i class="ri-star-fill"></i> New User (0 Kaam)';
 }
 
-langToggle.addEventListener('click', updateLoginStrings);
+function handleLoginSuccess(user) {
+  state.currentUser = user;
+  localStorage.setItem('currentUser', JSON.stringify(user));
+  updateProfileUI();
+  loginContainer.classList.add('hidden');
+  mainAppContainer.classList.remove('hidden');
+  showToast('लॉगिन सफल (Login Success)');
+  renderJobs();
+}
 
-sendOtpBtn.addEventListener('click', () => {
-  if (mobileInput.value.length === 10 && nameInput && nameInput.value.trim() !== '') {
-    step1Phone.classList.add('hidden');
-    step2Otp.classList.remove('hidden');
-    showToast('OTP भेजा गया: 1234');
-    
-    // Switch title
-    loginTitle.textContent = state.lang === 'hi' ? 'OTP दर्ज करें' : 'OTP टाका';
-    loginSub.textContent = '+91 ' + mobileInput.value + ' पर OTP भेजा गया';
+loginBtn.addEventListener('click', () => {
+  const mob = loginMobile.value;
+  const pwd = loginPassword.value;
+  
+  if (mob.length !== 10 || !pwd) {
+    showToast('कृपया सही विवरण डालें (Enter valid details)');
+    return;
+  }
+  
+  // Allow demo user bypass
+  if (mob.length === 10 && pwd === '1234') {
+    handleLoginSuccess({ name: 'Demo User', mobile: mob, role: 'worker', village: 'Demo Village', district: 'Demo District' });
+    return;
+  }
+  
+  const users = getUsers();
+  const user = users.find(u => u.mobile === mob && u.password === pwd);
+  
+  if (user) {
+    handleLoginSuccess(user);
   } else {
-    showToast(state.lang === 'hi' ? 'कृपया सही मोबाइल नंबर और नाम डालें' : 'कृपया योग्य मोबाईल नंबर आणि नाव टाका');
+    showToast('गलत मोबाइल नंबर या पासवर्ड (Invalid mobile or password)');
   }
 });
 
-verifyOtpBtn.addEventListener('click', () => {
-  if (otpInput.value === '1234') {
-    state.userPhone = mobileInput.value;
-    state.userName = nameInput ? nameInput.value.trim() : 'Guest';
-    
-    localStorage.setItem('userPhone', state.userPhone);
-    localStorage.setItem('userName', state.userName);
-    
-    // Update profile UI
-    const profileNameEl = document.getElementById('profile-user-name');
-    if (profileNameEl) profileNameEl.textContent = state.userName;
-
-    loginContainer.classList.add('hidden');
-    mainAppContainer.classList.remove('hidden');
-    showToast('लॉगिन सफल (Login Success)');
-    renderJobs();
-  } else {
-    showToast(state.lang === 'hi' ? 'गलत OTP (Incorrect OTP)' : 'चुकीचा OTP');
+signupBtn.addEventListener('click', () => {
+  const name = signupName.value.trim();
+  const mob = signupMobile.value;
+  const pwd = signupPassword.value;
+  const role = signupRole.value;
+  
+  if (!name || mob.length !== 10 || !pwd || !role) {
+    showToast('कृपया सभी ज़रूरी जानकारी भरें (Fill all required fields)');
+    return;
   }
+  
+  const users = getUsers();
+  if (users.find(u => u.mobile === mob)) {
+    showToast('यह नंबर पहले से रजिस्टर है (Number already registered)');
+    return;
+  }
+  
+  const newUser = {
+    id: Date.now(),
+    name, mobile: mob, password: pwd, role,
+    village: signupVillage.value.trim(),
+    district: signupDistrict.value.trim(),
+    state: signupState.value.trim(),
+    skills: signupSkills.value.trim()
+  };
+  
+  users.push(newUser);
+  saveUsers(users);
+  
+  // Auto login after signup
+  handleLoginSuccess(newUser);
 });
 
-// Init Login Strings
-updateLoginStrings();
+// Logout Logic
+const logoutBtn = document.getElementById('logout-btn');
+if (logoutBtn) {
+  logoutBtn.addEventListener('click', () => {
+    state.currentUser = null;
+    localStorage.removeItem('currentUser');
+    mainAppContainer.classList.add('hidden');
+    loginContainer.classList.remove('hidden');
+    loginMobile.value = '';
+    loginPassword.value = '';
+    showToast('लॉगआउट सफल (Logged out)');
+  });
+}
 
 // Search Box Logic
 document.getElementById('text-search-work').addEventListener('input', (e) => {
@@ -543,16 +607,13 @@ document.getElementById('text-post-job').addEventListener('input', (e) => {
   }
 });
 
-// Check session / focus on load
-if (state.userPhone) {
-  // Update profile UI if already logged in
-  const profileNameEl = document.getElementById('profile-user-name');
-  if (profileNameEl) profileNameEl.textContent = state.userName;
-
+// Check session on load
+if (state.currentUser) {
+  updateProfileUI();
   loginContainer.classList.add('hidden');
   mainAppContainer.classList.remove('hidden');
 } else {
-  if(nameInput) nameInput.focus();
+  if(loginMobile) loginMobile.focus();
 }
 
 // Init Application

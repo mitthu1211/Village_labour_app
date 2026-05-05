@@ -11,40 +11,93 @@
 </head>
 <body>
 
-  <!-- Login Overlay -->
+  <!-- Auth Overlay -->
   <div id="login-container" class="login-wrapper">
-    <div class="login-box">
+    <div class="login-box" id="auth-box">
       <div class="logo-large">
         <i class="ri-plant-fill"></i>
         <h1>Gaon Ka Kaam</h1>
       </div>
-      <h2 id="login-title">लाग इन (Login)</h2>
-      <p id="login-sub">अपना मोबाइल नंबर दर्ज करें</p>
       
-      <div id="demo-login-details" style="background-color: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 8px; padding: 12px; margin: 15px 0; text-align: left; font-size: 14px; color: #334155;">
-        <p style="margin: 0 0 5px 0; font-weight: 600;">🛠️ Demo Login Details:</p>
-        <ul style="margin: 0; padding-left: 20px; font-size: 13px; line-height: 1.6;">
-          <li><strong>User:</strong> Any 10-digit number (OTP: 1234)</li>
-          <li><strong>Admin:</strong> <a href="admin.html" style="color: var(--primary); font-weight: 600; text-decoration: underline;">Admin Portal</a> (Pass: admin123)</li>
-        </ul>
-      </div>
-
-      <div id="step-1-phone">
+      <!-- Login View -->
+      <div id="login-view">
+        <h2 id="login-title">लाग इन (Login)</h2>
+        <p id="login-sub">अपने खाते में प्रवेश करें</p>
+        
         <div class="input-group" style="margin-bottom: 15px;">
-          <input type="text" id="name-input" placeholder="आपका नाम (Your Name)" style="width: 100%; padding: 12px 16px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 15px;">
-        </div>
-        <div class="input-group">
           <span class="country-code">+91</span>
-          <input type="tel" id="mobile-input" placeholder="मोबाइल नंबर" maxlength="10" oninput="this.value=this.value.replace(/[^0-9]/g,'');">
+          <input type="tel" id="login-mobile" placeholder="मोबाइल नंबर (Mobile)" maxlength="10" oninput="this.value=this.value.replace(/[^0-9]/g,'');">
         </div>
-        <button id="send-otp-btn" class="btn-primary" style="margin-top: 20px;">OTP भेजें</button>
+        
+        <div class="input-group" style="margin-bottom: 15px;">
+          <input type="password" id="login-password" placeholder="पासवर्ड (Password)" style="width: 100%; padding: 12px 16px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 15px;">
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; font-size: 13px;">
+          <label style="display: flex; align-items: center; gap: 5px; color: var(--text-dark);">
+            <input type="checkbox" id="login-remember" checked>
+            <span id="remember-text">याद रखें (Remember me)</span>
+          </label>
+          <a href="#" id="forgot-password-link" style="color: var(--primary); text-decoration: none; font-weight: 600;">पासवर्ड भूल गए?</a>
+        </div>
+
+        <button id="login-btn" class="btn-primary">लॉगिन करें (Login)</button>
+        
+        <p style="margin-top: 20px; font-size: 14px; color: var(--text-light);">
+          <span id="no-account-text">खाता नहीं है?</span> 
+          <a href="#" id="show-signup-link" style="color: var(--primary); font-weight: 600; text-decoration: none;">यहाँ रजिस्टर करें</a>
+        </p>
       </div>
 
-      <div id="step-2-otp" class="hidden">
-        <p style="color: var(--text-light); margin-bottom: 15px; font-size: 13px;">(डेमो के लिए OTP: 1234 डालें)</p>
-        <input type="tel" id="otp-input" placeholder="OTP दर्ज करें" class="large-input" maxlength="4" oninput="this.value=this.value.replace(/[^0-9]/g,'');">
-        <button id="verify-otp-btn" class="btn-primary" style="margin-top: 20px;">कन्फर्म करें</button>
+      <!-- Signup View -->
+      <div id="signup-view" class="hidden">
+        <h2 id="signup-title">रजिस्टर करें (Signup)</h2>
+        <p id="signup-sub">नया खाता बनाएँ</p>
+        
+        <div style="max-height: 50vh; overflow-y: auto; padding-right: 5px; margin-bottom: 15px; text-align: left;">
+          <div class="input-group" style="margin-bottom: 12px;">
+            <input type="text" id="signup-name" placeholder="पूरा नाम (Full Name)" style="width: 100%; padding: 12px 16px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 15px;">
+          </div>
+          
+          <div class="input-group" style="margin-bottom: 12px;">
+            <span class="country-code">+91</span>
+            <input type="tel" id="signup-mobile" placeholder="मोबाइल नंबर (Mobile)" maxlength="10" oninput="this.value=this.value.replace(/[^0-9]/g,'');">
+          </div>
+          
+          <div class="input-group" style="margin-bottom: 12px;">
+            <input type="password" id="signup-password" placeholder="नया पासवर्ड (Password)" style="width: 100%; padding: 12px 16px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 15px;">
+          </div>
+          
+          <div class="input-group" style="margin-bottom: 12px;">
+            <select id="signup-role" style="width: 100%; padding: 12px 16px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 15px; background: white; outline: none;">
+              <option value="" disabled selected>आप क्या हैं? (Select Role)</option>
+              <option value="worker">मज़दूर (Worker)</option>
+              <option value="employer">किसान/मालिक (Employer)</option>
+            </select>
+          </div>
+
+          <div style="display: flex; gap: 10px; margin-bottom: 12px;">
+            <input type="text" id="signup-village" placeholder="गाँव (Village)" style="flex:1; padding: 12px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 14px; width: 100%;">
+            <input type="text" id="signup-district" placeholder="ज़िला (District)" style="flex:1; padding: 12px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 14px; width: 100%;">
+          </div>
+          
+          <div class="input-group" style="margin-bottom: 12px;">
+            <input type="text" id="signup-state" placeholder="राज्य (State)" style="width: 100%; padding: 12px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 14px;">
+          </div>
+          
+          <div class="input-group" style="margin-bottom: 5px;">
+            <input type="text" id="signup-skills" placeholder="कौशल (Skills - Optional)" style="width: 100%; padding: 12px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 14px;">
+          </div>
+        </div>
+
+        <button id="signup-btn" class="btn-primary">खाता बनाएँ (Create Account)</button>
+        
+        <p style="margin-top: 20px; font-size: 14px; color: var(--text-light);">
+          <span id="have-account-text">पहले से खाता है?</span> 
+          <a href="#" id="show-login-link" style="color: var(--primary); font-weight: 600; text-decoration: none;">यहाँ लॉगिन करें</a>
+        </p>
       </div>
+
     </div>
   </div>
 
@@ -133,16 +186,20 @@
     <section id="tab-profile" class="view-section hidden">
       <div class="profile-header">
         <div class="avatar">
-          <i class="ri-user-fill"></i>
+          <i class="ri-user-fill" id="profile-avatar-icon"></i>
         </div>
-        <h2 id="profile-user-name">Ramesh Kumar</h2>
-        <p class="role">Mazdoor / Kisaan</p>
-        <span class="rating"><i class="ri-star-fill"></i> 4.8 (12 Kaam)</span>
+        <h2 id="profile-user-name">Guest User</h2>
+        <p class="role" id="profile-role">User</p>
+        <p style="font-size: 13px; color: var(--text-light); margin-top: 5px;"><i class="ri-map-pin-2-line"></i> <span id="profile-location">Location Not Set</span></p>
+        <span class="rating" id="profile-rating"><i class="ri-star-fill"></i> New User (0 Kaam)</span>
       </div>
 
-      <div class="profile-actions">
-        <button class="btn-outline">
-          <i class="ri-mic-fill"></i> Voice Profile Upload karein
+      <div class="profile-actions" style="display: flex; gap: 10px; margin-bottom: 20px;">
+        <button class="btn-outline" style="flex: 1;" id="voice-profile-btn">
+          <i class="ri-mic-fill"></i> Voice Profile
+        </button>
+        <button class="btn-outline" style="flex: 1; border-color: #ef4444; color: #ef4444;" id="logout-btn">
+          <i class="ri-logout-box-r-line"></i> Logout
         </button>
       </div>
 
