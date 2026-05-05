@@ -30,6 +30,9 @@
       </div>
 
       <div id="step-1-phone">
+        <div class="input-group" style="margin-bottom: 15px;">
+          <input type="text" id="name-input" placeholder="आपका नाम (Your Name)" style="width: 100%; padding: 12px 16px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 15px;">
+        </div>
         <div class="input-group">
           <span class="country-code">+91</span>
           <input type="tel" id="mobile-input" placeholder="मोबाइल नंबर" maxlength="10" oninput="this.value=this.value.replace(/[^0-9]/g,'');">
@@ -132,7 +135,7 @@
         <div class="avatar">
           <i class="ri-user-fill"></i>
         </div>
-        <h2>Ramesh Kumar</h2>
+        <h2 id="profile-user-name">Ramesh Kumar</h2>
         <p class="role">Mazdoor / Kisaan</p>
         <span class="rating"><i class="ri-star-fill"></i> 4.8 (12 Kaam)</span>
       </div>

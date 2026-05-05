@@ -73,6 +73,7 @@ const ADMIN_PHONE = "0000000000"; // All calls will be routed through this numbe
 const state = {
   lang: 'hi', // 'hi' = Hindi, 'mr' = Marathi
   userPhone: localStorage.getItem('userPhone') || null,
+  userName: localStorage.getItem('userName') || 'Ramesh Kumar',
   activeCategory: 'all',
   searchQuery: ''
 };
@@ -453,6 +454,7 @@ const mainAppContainer = document.getElementById('main-app-container');
 const sendOtpBtn = document.getElementById('send-otp-btn');
 const verifyOtpBtn = document.getElementById('verify-otp-btn');
 const mobileInput = document.getElementById('mobile-input');
+const nameInput = document.getElementById('name-input');
 const otpInput = document.getElementById('otp-input');
 const step1Phone = document.getElementById('step-1-phone');
 const step2Otp = document.getElementById('step-2-otp');
@@ -481,7 +483,7 @@ function updateLoginStrings() {
 langToggle.addEventListener('click', updateLoginStrings);
 
 sendOtpBtn.addEventListener('click', () => {
-  if (mobileInput.value.length === 10) {
+  if (mobileInput.value.length === 10 && nameInput && nameInput.value.trim() !== '') {
     step1Phone.classList.add('hidden');
     step2Otp.classList.remove('hidden');
     showToast('OTP भेजा गया: 1234');
@@ -490,14 +492,22 @@ sendOtpBtn.addEventListener('click', () => {
     loginTitle.textContent = state.lang === 'hi' ? 'OTP दर्ज करें' : 'OTP टाका';
     loginSub.textContent = '+91 ' + mobileInput.value + ' पर OTP भेजा गया';
   } else {
-    showToast(state.lang === 'hi' ? 'कृपया सही मोबाइल नंबर डालें' : 'कृपया योग्य मोबाईल नंबर टाका');
+    showToast(state.lang === 'hi' ? 'कृपया सही मोबाइल नंबर और नाम डालें' : 'कृपया योग्य मोबाईल नंबर आणि नाव टाका');
   }
 });
 
 verifyOtpBtn.addEventListener('click', () => {
   if (otpInput.value === '1234') {
     state.userPhone = mobileInput.value;
+    state.userName = nameInput ? nameInput.value.trim() : 'Guest';
+    
     localStorage.setItem('userPhone', state.userPhone);
+    localStorage.setItem('userName', state.userName);
+    
+    // Update profile UI
+    const profileNameEl = document.getElementById('profile-user-name');
+    if (profileNameEl) profileNameEl.textContent = state.userName;
+
     loginContainer.classList.add('hidden');
     mainAppContainer.classList.remove('hidden');
     showToast('लॉगिन सफल (Login Success)');
@@ -535,10 +545,14 @@ document.getElementById('text-post-job').addEventListener('input', (e) => {
 
 // Check session / focus on load
 if (state.userPhone) {
+  // Update profile UI if already logged in
+  const profileNameEl = document.getElementById('profile-user-name');
+  if (profileNameEl) profileNameEl.textContent = state.userName;
+
   loginContainer.classList.add('hidden');
   mainAppContainer.classList.remove('hidden');
 } else {
-  if(mobileInput) mobileInput.focus();
+  if(nameInput) nameInput.focus();
 }
 
 // Init Application
