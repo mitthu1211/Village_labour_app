@@ -502,11 +502,11 @@ html, body {
   position: absolute;
   top: 0; left: 0; right: 0; bottom: 0;
   background: white;
-  display: flex;
-  justify-content: center;
-  align-items: center;
   z-index: 2000;
-  padding: 20px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 .login-wrapper.hidden { display: none; }
 
@@ -514,10 +514,11 @@ html, body {
   background: white;
   width: 100%;
   max-width: 400px;
-  padding: 20px;
+  padding: 40px 20px;
   border-radius: 0;
   text-align: center;
   box-shadow: none;
+  margin: auto 0;
 }
 
 .logo-large {
