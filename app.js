@@ -69,23 +69,67 @@ let JOB_DATA = loadJobs();
 // Admin Contact configuration
 const ADMIN_PHONE = "0000000000"; // All calls will be routed through this number
 
+// Users Database & Auth Service (localStorage)
+const AuthService = {
+  getUsers: function() {
+    try {
+      const users = localStorage.getItem('gaon_users');
+      return users ? JSON.parse(users) : [];
+    } catch (e) {
+      console.error("Failed to parse users", e);
+      return [];
+    }
+  },
+  
+  saveUsers: function(users) {
+    localStorage.setItem('gaon_users', JSON.stringify(users));
+  },
+  
+  getCurrentUser: function() {
+    try {
+      const user = localStorage.getItem('currentUser');
+      return user ? JSON.parse(user) : null;
+    } catch (e) {
+      return null;
+    }
+  },
+  
+  setCurrentUser: function(user) {
+    if (user) {
+      localStorage.setItem('currentUser', JSON.stringify(user));
+    } else {
+      localStorage.removeItem('currentUser');
+    }
+    state.currentUser = user;
+  },
+  
+  login: function(mobile, password) {
+    const users = this.getUsers();
+    return users.find(u => String(u.mobile).trim() === String(mobile).trim() && String(u.password) === String(password));
+  },
+  
+  signup: function(userData) {
+    const users = this.getUsers();
+    if (users.find(u => String(u.mobile).trim() === String(userData.mobile).trim())) {
+      throw new Error('Number already registered');
+    }
+    users.push(userData);
+    this.saveUsers(users);
+    return userData;
+  },
+  
+  logout: function() {
+    this.setCurrentUser(null);
+  }
+};
+
 // App State
 const state = {
   lang: 'hi', // 'hi' = Hindi, 'mr' = Marathi
-  currentUser: JSON.parse(localStorage.getItem('currentUser')) || null,
+  currentUser: AuthService.getCurrentUser(),
   activeCategory: 'all',
   searchQuery: ''
 };
-
-// Users Database (localStorage)
-function getUsers() {
-  const users = localStorage.getItem('gaon_users');
-  return users ? JSON.parse(users) : [];
-}
-
-function saveUsers(users) {
-  localStorage.setItem('gaon_users', JSON.stringify(users));
-}
 
 // UI Text Dictionary
 const i18n = {
@@ -518,8 +562,7 @@ function updateProfileUI() {
 }
 
 function handleLoginSuccess(user) {
-  state.currentUser = user;
-  localStorage.setItem('currentUser', JSON.stringify(user));
+  AuthService.setCurrentUser(user);
   updateProfileUI();
   loginContainer.classList.add('hidden');
   mainAppContainer.classList.remove('hidden');
@@ -536,20 +579,20 @@ loginBtn.addEventListener('click', () => {
     return;
   }
   
-  // Allow demo user bypass
+  const user = AuthService.login(mob, pwd);
+  
+  if (user) {
+    handleLoginSuccess(user);
+    return;
+  }
+  
+  // Allow demo user bypass if not found in db
   if (mob.length === 10 && pwd === '1234') {
     handleLoginSuccess({ name: 'Demo User', mobile: mob, role: 'worker', village: 'Demo Village', district: 'Demo District' });
     return;
   }
   
-  const users = getUsers();
-  const user = users.find(u => u.mobile === mob && u.password === pwd);
-  
-  if (user) {
-    handleLoginSuccess(user);
-  } else {
-    showToast('गलत मोबाइल नंबर या पासवर्ड (Invalid mobile or password)');
-  }
+  showToast('गलत मोबाइल नंबर या पासवर्ड (Invalid mobile or password)');
 });
 
 signupBtn.addEventListener('click', () => {
@@ -563,12 +606,6 @@ signupBtn.addEventListener('click', () => {
     return;
   }
   
-  const users = getUsers();
-  if (users.find(u => u.mobile === mob)) {
-    showToast('यह नंबर पहले से रजिस्टर है (Number already registered)');
-    return;
-  }
-  
   const newUser = {
     id: Date.now(),
     name, mobile: mob, password: pwd, role,
@@ -577,20 +614,26 @@ signupBtn.addEventListener('click', () => {
     state: signupState.value.trim(),
     skills: signupSkills.value.trim()
   };
-  
-  users.push(newUser);
-  saveUsers(users);
-  
-  // Auto login after signup
-  handleLoginSuccess(newUser);
+
+  try {
+    AuthService.signup(newUser);
+    // Auto login after signup
+    handleLoginSuccess(newUser);
+  } catch (err) {
+    if (err.message === 'Number already registered') {
+      showToast('यह नंबर पहले से रजिस्टर है (Number already registered)');
+    } else {
+      console.error("Signup error:", err);
+      showToast('Registration failed. Please try again.');
+    }
+  }
 });
 
 // Logout Logic
 const logoutBtn = document.getElementById('logout-btn');
 if (logoutBtn) {
   logoutBtn.addEventListener('click', () => {
-    state.currentUser = null;
-    localStorage.removeItem('currentUser');
+    AuthService.logout();
     mainAppContainer.classList.add('hidden');
     loginContainer.classList.remove('hidden');
     loginMobile.value = '';
