@@ -1,7 +1,12 @@
-// Mock Data for Jobs
+// Supabase Initialization
+const SUPABASE_URL = 'https://uqqqktkvqqhplgaugezm.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVxcXFrdGt2cXFocGxnYXVnZXptIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg2MDQ0ODAsImV4cCI6MjA5NDE4MDQ4MH0.ulYw-8Jiy-8hKz3U16sl_auDRURNNz-Pku2zEiKAEAE';
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// Mock Data for Jobs (Fallback)
 const DEFAULT_JOBS = [
   {
-    id: 1,
+    id: "1",
     title: { hi: "खेत की कटाई", mr: "शेत कापणी" },
     desc: "कल 3 मज़दूर चाहिए गेहूं काटने के लिए।",
     wage: "₹400 / दिन",
@@ -10,81 +15,55 @@ const DEFAULT_JOBS = [
     lng: 72.8777,
     phone: "9876543210",
     category: "kheti"
-  },
-  {
-    id: 2,
-    title: { hi: "राजमिस्त्री का काम", mr: "गवंडी काम" },
-    desc: "दीवार बनाने के लिए 1 मिस्त्री और 2 हेल्पर चाहिए।",
-    wage: "₹600 / दिन",
-    location: "4 किमी दूर - सरपंच घर",
-    lat: 19.0800,
-    lng: 72.8800,
-    phone: "9876543211",
-    category: "mistri"
-  },
-  {
-    id: 3,
-    title: { hi: "खेत की जुताई", mr: "नांगरणी" },
-    desc: "ट्रैक्टर के साथ जुताई का काम है।",
-    wage: "₹500 / दिन",
-    location: "1 किमी दूर - शिवम् का खेत",
-    lat: 19.0710,
-    lng: 72.8850,
-    phone: "9876543212",
-    category: "kheti"
-  },
-  {
-    id: 4,
-    title: { hi: "सामान ढोना", mr: "सामान उचलणे" },
-    desc: "दुकान से 50 बोरी सीमेंट उतारना है।",
-    wage: "₹350 / दिन",
-    location: "0.5 किमी दूर - रामजी सेठ",
-    lat: 19.0750,
-    lng: 72.8700,
-    phone: "9876543213",
-    category: "majdoori"
   }
 ];
 
 const DEFAULT_LABOURERS = [
   { id: 101, name: "Suresh (Kheti)", lat: 19.0740, lng: 72.8790, category: "kheti" },
-  { id: 102, name: "Ramesh (Mistri)", lat: 19.0810, lng: 72.8750, category: "mistri" },
-  { id: 103, name: "Dinesh (Majdoor)", lat: 19.0720, lng: 72.8720, category: "majdoori" },
-  { id: 104, name: "Ganesh (Kheti)", lat: 19.0780, lng: 72.8880, category: "kheti" }
+  { id: 102, name: "Ramesh (Mistri)", lat: 19.0810, lng: 72.8750, category: "mistri" }
 ];
 
-function loadJobs() {
-  const stored = localStorage.getItem('gaon_jobs');
-  if (stored) return JSON.parse(stored);
-  localStorage.setItem('gaon_jobs', JSON.stringify(DEFAULT_JOBS));
-  return DEFAULT_JOBS;
+let JOB_DATA = [];
+
+async function loadJobs() {
+  try {
+    const { data, error } = await supabase.from('jobs').select('*');
+    if (error) throw error;
+    if (data && data.length > 0) {
+      JOB_DATA = data;
+    } else {
+      JOB_DATA = DEFAULT_JOBS;
+    }
+  } catch (err) {
+    console.error("Failed to load jobs from Supabase", err);
+    JOB_DATA = DEFAULT_JOBS; // fallback
+  }
+  renderJobs();
 }
 
-function saveJobs() {
-  localStorage.setItem('gaon_jobs', JSON.stringify(JOB_DATA));
+async function saveJobToDB(job) {
+  try {
+    const { data, error } = await supabase.from('jobs').insert([job]).select();
+    if (error) throw error;
+    return data[0];
+  } catch (err) {
+    console.error("Failed to save job to Supabase", err);
+    return null;
+  }
 }
-
-let JOB_DATA = loadJobs();
 
 // Admin Contact configuration
 const ADMIN_PHONE = "0000000000"; // All calls will be routed through this number
 
-// Users Database & Auth Service (localStorage)
+// Users Database & Auth Service (Supabase)
+async function hashPassword(password) {
+  const msgBuffer = new TextEncoder().encode(password);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
 const AuthService = {
-  getUsers: function() {
-    try {
-      const users = localStorage.getItem('gaon_users');
-      return users ? JSON.parse(users) : [];
-    } catch (e) {
-      console.error("Failed to parse users", e);
-      return [];
-    }
-  },
-  
-  saveUsers: function(users) {
-    localStorage.setItem('gaon_users', JSON.stringify(users));
-  },
-  
   getCurrentUser: function() {
     try {
       const user = localStorage.getItem('currentUser');
@@ -103,19 +82,82 @@ const AuthService = {
     state.currentUser = user;
   },
   
-  login: function(mobile, password) {
-    const users = this.getUsers();
-    return users.find(u => String(u.mobile).trim() === String(mobile).trim() && String(u.password) === String(password));
+  login: async function(mobile, password) {
+    const hashed = await hashPassword(password);
+    
+    // Try hashed password first
+    let { data, error } = await supabase
+      .from('users')
+      .select('*')
+      .eq('mobile', String(mobile).trim())
+      .eq('password', hashed)
+      .single();
+      
+    // Fallback to plain text for backward compatibility
+    if (error || !data) {
+      const res = await supabase
+        .from('users')
+        .select('*')
+        .eq('mobile', String(mobile).trim())
+        .eq('password', String(password))
+        .single();
+      data = res.data;
+      error = res.error;
+    }
+      
+    if (error || !data) {
+      return null;
+    }
+    return data;
+  },
+
+  loginWithOtp: async function(mobile) {
+    const { data, error } = await supabase
+      .from('users')
+      .select('*')
+      .eq('mobile', String(mobile).trim())
+      .single();
+    if (error || !data) {
+      return null;
+    }
+    return data;
   },
   
-  signup: function(userData) {
-    const users = this.getUsers();
-    if (users.find(u => String(u.mobile).trim() === String(userData.mobile).trim())) {
+  signup: async function(userData) {
+    // Check if exists
+    const { data: existing } = await supabase
+      .from('users')
+      .select('mobile')
+      .eq('mobile', String(userData.mobile).trim())
+      .single();
+      
+    if (existing) {
       throw new Error('Number already registered');
     }
-    users.push(userData);
-    this.saveUsers(users);
-    return userData;
+    
+    userData.password = await hashPassword(userData.password);
+    
+    // Insert new user
+    const { data, error } = await supabase
+      .from('users')
+      .insert([userData])
+      .select()
+      .single();
+      
+    if (error) {
+      console.error("Supabase insert error:", error);
+      throw new Error('Failed to create account');
+    }
+    return data;
+  },
+
+  updatePassword: async function(mobile, newPassword) {
+    const hashed = await hashPassword(newPassword);
+    const { error } = await supabase
+      .from('users')
+      .update({ password: hashed })
+      .eq('mobile', String(mobile).trim());
+    if (error) throw error;
   },
   
   logout: function() {
@@ -424,28 +466,6 @@ document.getElementById('confirm-post-btn').addEventListener('click', () => {
         }
       );
     } else {
-      finalizePostJob(text, selectedCategory, 19.0760, 72.8777);
-    }
-});
-
-function finalizePostJob(text, selectedCategory, lat, lng) {
-    showToast("Job Posted Successfully!");
-    
-    JOB_DATA.unshift({
-        id: Date.now(),
-        title: { hi: "नया काम", mr: "नवीन काम" },
-        desc: text,
-        wage: "बातचीत करें (Discuss)",
-        location: "Live Location",
-        lat: lat,
-        lng: lng,
-        phone: state.userPhone || "Not Provided",
-        category: selectedCategory
-    });
-    
-    saveJobs();
-    
-    document.getElementById('text-post-job').value = '';
     document.getElementById('post-result-card').classList.add('hidden');
     // switch to home tab
     navItems[0].click();
@@ -529,8 +549,16 @@ document.getElementById('show-login-link').addEventListener('click', (e) => { e.
 // Login Elements
 const loginMobile = document.getElementById('login-mobile');
 const loginPassword = document.getElementById('login-password');
-const loginBtn = document.getElementById('login-btn');
 const forgotPwdLink = document.getElementById('forgot-password-link');
+const passwordGroup = document.getElementById('password-group');
+const togglePasswordLoginBtn = document.getElementById('toggle-password-login-btn');
+const requestOtpBtn = document.getElementById('request-otp-btn');
+const otpLoginView = document.getElementById('otp-login-view');
+const otpDisplayMobile = document.getElementById('otp-display-mobile');
+const verifyLoginOtpBtn = document.getElementById('verify-login-otp-btn');
+const loginOtpInputs = document.querySelectorAll('.login-otp-input');
+const backToLoginFromOtp = document.getElementById('back-to-login-from-otp');
+const guestLoginLink = document.getElementById('guest-login-link');
 
 // Signup Elements
 const signupName = document.getElementById('signup-name');
@@ -542,8 +570,113 @@ const signupDistrict = document.getElementById('signup-district');
 const signupState = document.getElementById('signup-state');
 const signupSkills = document.getElementById('signup-skills');
 const signupBtn = document.getElementById('signup-btn');
+const signupConfirmPassword = document.getElementById('signup-confirm-password');
 
-forgotPwdLink.addEventListener('click', (e) => { e.preventDefault(); showToast('पासवर्ड रीसेट लिंक आपके नंबर पर भेजा गया (Password reset link sent)'); });
+// Forgot Password Elements
+const forgotPwdView = document.getElementById('forgot-pwd-view');
+const forgotMobile = document.getElementById('forgot-mobile');
+const forgotSendOtpBtn = document.getElementById('forgot-send-otp-btn');
+const forgotStep1 = document.getElementById('forgot-step-1');
+const forgotStep2 = document.getElementById('forgot-step-2');
+const forgotOtp = document.getElementById('forgot-otp');
+const forgotVerifyOtpBtn = document.getElementById('forgot-verify-otp-btn');
+const forgotStep3 = document.getElementById('forgot-step-3');
+const forgotNewPassword = document.getElementById('forgot-new-password');
+const forgotConfirmPassword = document.getElementById('forgot-confirm-password');
+const forgotResetBtn = document.getElementById('forgot-reset-btn');
+const backToLoginLink = document.getElementById('back-to-login-link');
+const otpSentMsg = document.getElementById('otp-sent-msg');
+
+let generatedOTP = null;
+let forgotMobileNum = null;
+
+forgotPwdLink.addEventListener('click', (e) => { 
+  e.preventDefault(); 
+  loginView.classList.add('hidden');
+  forgotPwdView.classList.remove('hidden');
+  forgotStep1.classList.remove('hidden');
+  forgotStep2.classList.add('hidden');
+  forgotStep3.classList.add('hidden');
+  forgotMobile.value = '';
+});
+
+backToLoginLink.addEventListener('click', (e) => {
+  e.preventDefault();
+  forgotPwdView.classList.add('hidden');
+  loginView.classList.remove('hidden');
+});
+
+forgotSendOtpBtn.addEventListener('click', async () => {
+  const mob = forgotMobile.value;
+  if (mob.length !== 10) {
+    showToast('कृपया सही 10-अंकों का नंबर दर्ज करें');
+    return;
+  }
+
+  forgotSendOtpBtn.disabled = true;
+  forgotSendOtpBtn.textContent = 'Checking...';
+  const { data, error } = await supabase.from('users').select('id').eq('mobile', mob).single();
+  forgotSendOtpBtn.disabled = false;
+  forgotSendOtpBtn.textContent = 'OTP भेजें (Send OTP)';
+
+  if (error || !data) {
+    showToast('यह नंबर रजिस्टर नहीं है (Number not registered)');
+    return;
+  }
+
+  generatedOTP = Math.floor(100000 + Math.random() * 900000).toString();
+  forgotMobileNum = mob;
+  
+  console.log(`[DEMO MODE] Your OTP is: ${generatedOTP}`);
+  
+  forgotStep1.classList.add('hidden');
+  forgotStep2.classList.remove('hidden');
+  otpSentMsg.textContent = `OTP ${mob} पर भेजा गया है | (Demo: ${generatedOTP})`;
+  showToast('OTP भेजा गया (OTP Sent)');
+});
+
+forgotVerifyOtpBtn.addEventListener('click', () => {
+  const entered = forgotOtp.value;
+  if (entered !== generatedOTP) {
+    showToast('अमान्य OTP (Invalid OTP)');
+    return;
+  }
+  
+  forgotStep2.classList.add('hidden');
+  forgotStep3.classList.remove('hidden');
+  showToast('OTP सत्यापित (OTP Verified)');
+});
+
+forgotResetBtn.addEventListener('click', async () => {
+  const npwd = forgotNewPassword.value;
+  const cpwd = forgotConfirmPassword.value;
+  
+  if (npwd.length < 6) {
+    showToast('पासवर्ड कम से कम 6 अक्षरों का होना चाहिए');
+    return;
+  }
+  if (npwd !== cpwd) {
+    showToast('पासवर्ड मेल नहीं खाते (Passwords mismatch)');
+    return;
+  }
+
+  forgotResetBtn.disabled = true;
+  forgotResetBtn.textContent = 'Updating...';
+
+  try {
+    await AuthService.updatePassword(forgotMobileNum, npwd);
+    showToast('पासवर्ड सफलतापूर्वक बदल दिया गया (Password Reset Successful)');
+    forgotPwdView.classList.add('hidden');
+    loginView.classList.remove('hidden');
+    loginMobile.value = forgotMobileNum;
+    loginPassword.value = '';
+  } catch (e) {
+    showToast('Error resetting password');
+  } finally {
+    forgotResetBtn.disabled = false;
+    forgotResetBtn.textContent = 'पासवर्ड बदलें (Reset Password)';
+  }
+});
 
 // Auth Functions
 function updateProfileUI() {
@@ -570,44 +703,172 @@ function handleLoginSuccess(user) {
   renderJobs();
 }
 
-loginBtn.addEventListener('click', () => {
-  const mob = loginMobile.value;
-  const pwd = loginPassword.value;
-  
-  if (mob.length !== 10 || !pwd) {
-    showToast('कृपया सही विवरण डालें (Enter valid details)');
-    return;
-  }
-  
-  const user = AuthService.login(mob, pwd);
-  
-  if (user) {
-    handleLoginSuccess(user);
-    return;
-  }
-  
-  // Allow demo user bypass if not found in db
-  if (mob.length === 10 && pwd === '1234') {
-    handleLoginSuccess({ name: 'Demo User', mobile: mob, role: 'worker', village: 'Demo Village', district: 'Demo District' });
-    return;
-  }
-  
-  showToast('गलत मोबाइल नंबर या पासवर्ड (Invalid mobile or password)');
+let isPasswordLogin = false;
+let loginGeneratedOTP = null;
+let loginMobileNum = null;
+
+if (togglePasswordLoginBtn) {
+  togglePasswordLoginBtn.addEventListener('click', () => {
+    isPasswordLogin = !isPasswordLogin;
+    if (isPasswordLogin) {
+      passwordGroup.style.display = 'flex';
+      requestOtpBtn.textContent = 'Login';
+      togglePasswordLoginBtn.innerHTML = '<i class="ri-message-3-line"></i> Login with OTP';
+    } else {
+      passwordGroup.style.display = 'none';
+      requestOtpBtn.textContent = 'Send OTP';
+      togglePasswordLoginBtn.innerHTML = '<i class="ri-lock-password-line"></i> Login with Password';
+    }
+  });
+}
+
+if (requestOtpBtn) {
+  requestOtpBtn.addEventListener('click', async () => {
+    const mob = loginMobile.value;
+    if (mob.length !== 10) {
+      showToast('Please enter a valid 10-digit mobile number');
+      return;
+    }
+
+    if (isPasswordLogin) {
+      const pwd = loginPassword.value;
+      if (!pwd) {
+        showToast('Please enter your password');
+        return;
+      }
+      const originalText = requestOtpBtn.textContent;
+      requestOtpBtn.textContent = 'Logging in...';
+      requestOtpBtn.disabled = true;
+      
+      try {
+        const user = await AuthService.login(mob, pwd);
+        if (user) {
+          handleLoginSuccess(user);
+        } else {
+          showToast('Invalid mobile number or password');
+        }
+      } catch (err) {
+        console.error("Login Error:", err);
+        showToast('Login failed. Please try again.');
+      } finally {
+        requestOtpBtn.textContent = originalText;
+        requestOtpBtn.disabled = false;
+      }
+      return;
+    }
+
+    // OTP Flow
+    const originalText = requestOtpBtn.textContent;
+    requestOtpBtn.textContent = 'Sending OTP...';
+    requestOtpBtn.disabled = true;
+
+    try {
+      const user = await AuthService.loginWithOtp(mob);
+      if (!user) {
+        showToast('Account not found. Please register.');
+        return;
+      }
+      loginGeneratedOTP = Math.floor(100000 + Math.random() * 900000).toString();
+      loginMobileNum = mob;
+      
+      console.log(`[DEMO MODE] Your Login OTP is: ${loginGeneratedOTP}`);
+      
+      loginView.classList.add('hidden');
+      otpLoginView.classList.remove('hidden');
+      otpDisplayMobile.textContent = '+91 ' + mob;
+      
+      if(loginOtpInputs.length > 0) loginOtpInputs[0].focus();
+      
+      showToast(`OTP Sent (Demo: ${loginGeneratedOTP})`);
+    } catch (err) {
+      showToast('Failed to send OTP');
+    } finally {
+      requestOtpBtn.textContent = originalText;
+      requestOtpBtn.disabled = false;
+    }
+  });
+}
+
+// OTP Input Logic
+loginOtpInputs.forEach((input, index) => {
+  input.addEventListener('keyup', (e) => {
+    if (e.key === 'Backspace' && input.value === '' && index > 0) {
+      loginOtpInputs[index - 1].focus();
+    } else if (input.value.length === 1 && index < loginOtpInputs.length - 1) {
+      loginOtpInputs[index + 1].focus();
+    }
+  });
 });
 
-signupBtn.addEventListener('click', () => {
+if (verifyLoginOtpBtn) {
+  verifyLoginOtpBtn.addEventListener('click', async () => {
+    const entered = Array.from(loginOtpInputs).map(i => i.value).join('');
+    if (entered !== loginGeneratedOTP) {
+      showToast('Invalid OTP');
+      return;
+    }
+    
+    verifyLoginOtpBtn.disabled = true;
+    verifyLoginOtpBtn.textContent = 'Verifying...';
+    
+    try {
+      const user = await AuthService.loginWithOtp(loginMobileNum);
+      if (user) {
+        handleLoginSuccess(user);
+      }
+    } catch (err) {
+      showToast('Error during login');
+    } finally {
+      verifyLoginOtpBtn.disabled = false;
+      verifyLoginOtpBtn.textContent = 'Verify OTP';
+    }
+  });
+}
+
+if (backToLoginFromOtp) {
+  backToLoginFromOtp.addEventListener('click', (e) => {
+    e.preventDefault();
+    otpLoginView.classList.add('hidden');
+    loginView.classList.remove('hidden');
+    loginOtpInputs.forEach(i => i.value = '');
+  });
+}
+
+if (guestLoginLink) {
+  guestLoginLink.addEventListener('click', (e) => {
+    e.preventDefault();
+    handleLoginSuccess({ name: 'Guest User', mobile: '0000000000', role: 'worker', village: 'Demo Village', district: 'Demo District' });
+  });
+}
+
+signupBtn.addEventListener('click', async () => {
   const name = signupName.value.trim();
   const mob = signupMobile.value;
   const pwd = signupPassword.value;
+  const confirmPwd = signupConfirmPassword ? signupConfirmPassword.value : pwd;
   const role = signupRole.value;
   
-  if (!name || mob.length !== 10 || !pwd || !role) {
+  if (!name || !mob || !pwd || !confirmPwd || !role) {
     showToast('कृपया सभी ज़रूरी जानकारी भरें (Fill all required fields)');
+    return;
+  }
+
+  if (mob.length !== 10) {
+    showToast('अमान्य मोबाइल नंबर (Invalid mobile number)');
+    return;
+  }
+
+  if (pwd.length < 6) {
+    showToast('पासवर्ड कम से कम 6 अक्षरों का होना चाहिए (Password min 6 chars)');
+    return;
+  }
+
+  if (pwd !== confirmPwd) {
+    showToast('पासवर्ड मेल नहीं खाते (Passwords do not match)');
     return;
   }
   
   const newUser = {
-    id: Date.now(),
     name, mobile: mob, password: pwd, role,
     village: signupVillage.value.trim(),
     district: signupDistrict.value.trim(),
@@ -615,17 +876,30 @@ signupBtn.addEventListener('click', () => {
     skills: signupSkills.value.trim()
   };
 
+  const originalText = signupBtn.textContent;
+  signupBtn.textContent = 'कृपया प्रतीक्षा करें... (Please wait...)';
+  signupBtn.disabled = true;
+
   try {
-    AuthService.signup(newUser);
-    // Auto login after signup
-    handleLoginSuccess(newUser);
+    const createdUser = await AuthService.signup(newUser);
+    showToast('पंजीकरण सफल! (Registration Successful)');
+    
+    // Redirect to login page per requirements
+    signupView.classList.add('hidden');
+    loginView.classList.remove('hidden');
+    loginMobile.value = mob;
+    loginPassword.value = '';
+    
   } catch (err) {
     if (err.message === 'Number already registered') {
-      showToast('यह नंबर पहले से रजिस्टर है (Number already registered)');
+      showToast('यह नंबर पहले से रजिस्टर है (Mobile already registered)');
     } else {
       console.error("Signup error:", err);
       showToast('Registration failed. Please try again.');
     }
+  } finally {
+    signupBtn.textContent = originalText;
+    signupBtn.disabled = false;
   }
 });
 

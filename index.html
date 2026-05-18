@@ -8,44 +8,87 @@
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+  <!-- Supabase JS Client -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
   <div id="app-wrapper">
   <!-- Auth Overlay -->
-  <div id="login-container" class="login-wrapper">
-    <div class="login-box" id="auth-box">
+  <div id="login-container" class="modern-login">
+    
+    <div class="login-header">
       <div class="logo-large">
         <i class="ri-plant-fill"></i>
-        <h1>Gaon Ka Kaam</h1>
       </div>
+      <h1>Village Labour</h1>
+      <p class="tagline">Find jobs near you easily</p>
+    </div>
+
+    <div class="login-box" id="auth-box">
       
       <!-- Login View -->
       <div id="login-view">
-        <h2 id="login-title">लाग इन (Login)</h2>
-        <p id="login-sub">अपने खाते में प्रवेश करें</p>
+        <h2 id="login-title">Login / Sign In</h2>
         
-        <div class="input-group" style="margin-bottom: 15px;">
+        <div class="input-group" style="margin-bottom: 20px;">
           <span class="country-code">+91</span>
-          <input type="tel" id="login-mobile" placeholder="मोबाइल नंबर (Mobile)" maxlength="10" oninput="this.value=this.value.replace(/[^0-9]/g,'');">
-        </div>
-        
-        <div class="input-group" style="margin-bottom: 15px;">
-          <input type="password" id="login-password" placeholder="पासवर्ड (Password)" style="width: 100%; padding: 12px 16px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 15px;">
+          <input type="tel" id="login-mobile" placeholder="Enter mobile number" maxlength="10" oninput="this.value=this.value.replace(/[^0-9]/g,'');">
         </div>
 
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; font-size: 13px;">
+        <!-- Optional Password Input for Password Login -->
+        <div class="input-group" id="password-group" style="margin-bottom: 15px; display: none;">
+          <input type="password" id="login-password" placeholder="Password" style="width: 100%; border: none; padding: 12px 16px; background: transparent; outline: none; font-size: 15px;">
+        </div>
+        
+        <div class="login-options" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; font-size: 13px;">
           <label style="display: flex; align-items: center; gap: 5px; color: var(--text-dark);">
             <input type="checkbox" id="login-remember" checked>
-            <span id="remember-text">याद रखें (Remember me)</span>
+            <span id="remember-text">Keep me logged in</span>
           </label>
-          <a href="#" id="forgot-password-link" style="color: var(--primary); text-decoration: none; font-weight: 600;">पासवर्ड भूल गए?</a>
+          <a href="#" id="forgot-password-link" style="color: var(--primary); text-decoration: none; font-weight: 600;">Forgot Password?</a>
         </div>
 
-        <button id="login-btn" class="btn-primary">लॉगिन करें (Login)</button>
+        <button id="request-otp-btn" class="btn-primary" style="margin-bottom: 15px;">Send OTP</button>
+
+        <div class="divider"><span>OR</span></div>
         
-        <p style="margin-top: 20px; font-size: 14px; color: var(--text-light);">
-          <span id="no-account-text">खाता नहीं है?</span> 
-          <a href="#" id="show-signup-link" style="color: var(--primary); font-weight: 600; text-decoration: none;">यहाँ रजिस्टर करें</a>
+        <button id="toggle-password-login-btn" class="btn-outline" style="width:100%; border: 2px solid var(--border-color); color: var(--text-dark); margin-bottom: 20px; border-radius: 12px; font-weight: 600; padding: 14px; display:flex; justify-content:center; align-items:center; gap:8px;">
+          <i class="ri-lock-password-line"></i> Login with Password
+        </button>
+
+        <div style="margin-top: 10px; font-size: 14px; color: var(--text-light); text-align: center;">
+          <span id="no-account-text">New to Village Labour?</span> 
+          <a href="#" id="show-signup-link" style="color: var(--primary); font-weight: 600; text-decoration: none;">Register Here</a>
+        </div>
+        
+        <div style="margin-top: 20px; text-align: center;">
+          <a href="#" id="guest-login-link" style="color: var(--text-light); font-weight: 500; font-size: 14px; text-decoration: underline;">Continue as Guest</a>
+        </div>
+      </div>
+
+      <!-- OTP Login Verification View -->
+      <div id="otp-login-view" class="hidden">
+        <h2>Enter OTP</h2>
+        <p style="color:var(--text-light); margin-bottom:20px; font-size: 14px; text-align: center;">We've sent a 6-digit code to <br><span id="otp-display-mobile" style="font-weight: 700; color: var(--text-dark);"></span></p>
+        
+        <div class="otp-boxes">
+          <input type="text" class="otp-box login-otp-input" maxlength="1">
+          <input type="text" class="otp-box login-otp-input" maxlength="1">
+          <input type="text" class="otp-box login-otp-input" maxlength="1">
+          <input type="text" class="otp-box login-otp-input" maxlength="1">
+          <input type="text" class="otp-box login-otp-input" maxlength="1">
+          <input type="text" class="otp-box login-otp-input" maxlength="1">
+        </div>
+        
+        <button id="verify-login-otp-btn" class="btn-primary" style="margin-bottom: 15px;">Verify OTP</button>
+        
+        <p style="text-align: center; font-size: 14px; color: var(--text-light); margin-bottom: 20px;">
+          <span id="login-otp-timer">Resend OTP in 30 sec</span>
+          <a href="#" id="login-resend-otp-btn" class="hidden" style="color: var(--primary); font-weight: 600; text-decoration: none;">Resend OTP</a>
+        </p>
+        
+        <p style="font-size: 14px; text-align: center;">
+          <a href="#" id="back-to-login-from-otp" style="color: var(--text-light); font-weight: 500; text-decoration: none;"><i class="ri-arrow-left-line"></i> Back to Login</a>
         </p>
       </div>
 
@@ -66,6 +109,10 @@
           
           <div class="input-group" style="margin-bottom: 12px;">
             <input type="password" id="signup-password" placeholder="नया पासवर्ड (Password)" style="width: 100%; padding: 12px 16px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 15px;">
+          </div>
+          
+          <div class="input-group" style="margin-bottom: 12px;">
+            <input type="password" id="signup-confirm-password" placeholder="पासवर्ड की पुष्टि करें (Confirm Password)" style="width: 100%; padding: 12px 16px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 15px;">
           </div>
           
           <div class="input-group" style="margin-bottom: 12px;">
@@ -98,8 +145,53 @@
         </p>
       </div>
 
+      <!-- Forgot Password View -->
+      <div id="forgot-pwd-view" class="hidden">
+        <h2>पासवर्ड रीसेट</h2>
+        <p style="color:var(--text-light); margin-bottom:20px;">अपना मोबाइल नंबर दर्ज करें</p>
+        
+        <div id="forgot-step-1">
+          <div class="input-group" style="margin-bottom: 15px;">
+            <span class="country-code">+91</span>
+            <input type="tel" id="forgot-mobile" placeholder="मोबाइल नंबर (Mobile)" maxlength="10" oninput="this.value=this.value.replace(/[^0-9]/g,'');">
+          </div>
+          <button id="forgot-send-otp-btn" class="btn-primary">OTP भेजें (Send OTP)</button>
+        </div>
+
+        <div id="forgot-step-2" class="hidden">
+          <p style="font-size: 14px; color: var(--primary); margin-bottom: 10px;" id="otp-sent-msg"></p>
+          <div class="input-group" style="margin-bottom: 15px;">
+            <input type="text" id="forgot-otp" placeholder="6-digit OTP" maxlength="6" oninput="this.value=this.value.replace(/[^0-9]/g,'');" style="width: 100%; padding: 12px 16px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 15px; text-align: center; letter-spacing: 5px;">
+          </div>
+          <button id="forgot-verify-otp-btn" class="btn-primary">OTP सत्यापित करें (Verify)</button>
+        </div>
+
+        <div id="forgot-step-3" class="hidden">
+          <div class="input-group" style="margin-bottom: 12px;">
+            <input type="password" id="forgot-new-password" placeholder="नया पासवर्ड (New Password)" style="width: 100%; padding: 12px 16px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 15px;">
+          </div>
+          <div class="input-group" style="margin-bottom: 15px;">
+            <input type="password" id="forgot-confirm-password" placeholder="पुष्टि करें (Confirm Password)" style="width: 100%; padding: 12px 16px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 15px;">
+          </div>
+          <button id="forgot-reset-btn" class="btn-primary">पासवर्ड बदलें (Reset Password)</button>
+        </div>
+
+        <p style="margin-top: 20px; font-size: 14px; color: var(--text-light);">
+          <a href="#" id="back-to-login-link" style="color: var(--primary); font-weight: 600; text-decoration: none;">वापस लॉगिन पर जाएं (Back to Login)</a>
+        </p>
+      </div>
+
+    </div>
+    
+    <div class="login-footer">
+      <div class="login-footer-links">
+        <a href="#">Privacy Policy</a>
+        <a href="#">Terms & Conditions</a>
+      </div>
+      <p>Select Language: <a href="#" class="login-lang">English</a> / <a href="#" class="login-lang" style="color:var(--text-light); font-weight:normal;">Hindi</a></p>
     </div>
   </div>
+
 
   <div id="main-app-container" class="hidden">
   <!-- Top Header -->
